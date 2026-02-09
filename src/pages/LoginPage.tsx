@@ -75,7 +75,7 @@ export const LoginPage = () => {
 
       dispatch(setCredentials({
         user: user,
-        token: accessToken
+        csrfToken: accessToken
       }));
 
     } catch (err: any) {

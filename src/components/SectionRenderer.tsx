@@ -69,8 +69,8 @@ export const SectionRenderer = ({ section, state, actions }: SectionRendererProp
             return <PackagingDelivery />;
 
         case "reviews":
-            // using static data for props for now as per previous implementation logic
-            return <ReviewsSection totalRating={4.5} reviewCount={100} />;
+            // ReviewsSection only needs productId
+            return <ReviewsSection productId={state?.currentProductId || ''} />;
 
         case "faq":
             return <FAQSection />;
