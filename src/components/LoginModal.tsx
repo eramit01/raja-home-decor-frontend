@@ -270,6 +270,11 @@ export const LoginModal = () => {
                                 )}
 
                                 {/* Google Login Removed as per user request */}
-                            </Transition>
-                            );
+                            </Dialog.Panel>
+                        </Transition.Child>
+                    </div>
+                </div>
+            </Dialog>
+        </Transition>
+    );
 };
