@@ -1,4 +1,5 @@
 import { api } from './api';
+import { store } from '../store';
 
 export interface SendOTPRequest {
   email?: string;
@@ -58,8 +59,21 @@ export const authService = {
     return response.data;
   },
 
+  import { store } from '../store';
+
   logout: async () => {
-    const response = await api.post('/auth/logout');
-    return response.data;
+    const { token } = store.getState().auth;
+    // If no token, we are already logged out on the client side.
+    // We skip the backend call to avoid 401/400 errors.
+    if (!token) {
+      return { success: true };
+    }
+    try {
+      const response = await api.post('/auth/logout');
+      return response.data;
+    } catch (error) {
+      // If logout fails (e.g. 401), we just ignore it as we are clearing client state anyway
+      return { success: true };
+    }
   },
 };
