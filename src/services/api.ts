@@ -55,9 +55,10 @@ api.interceptors.response.use(
         // Token refreshed successfully in cookie, retry original request
         return api.request(originalRequest);
       } catch (refreshError) {
-        // Refresh failed, logout user
-        store.dispatch(logoutAction());
-        window.location.href = '/';
+        // Refresh failed
+        console.error('Token refresh failed:', refreshError);
+        // store.dispatch(logoutAction());
+        // window.location.href = '/';
         return Promise.reject(refreshError);
       }
     }
