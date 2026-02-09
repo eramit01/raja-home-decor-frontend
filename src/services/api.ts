@@ -27,9 +27,12 @@ api.interceptors.request.use(
 
     // Always attach Authorization header if token exists (Fallback for blocked cookies)
     const state = store.getState();
-    const token = state.auth.token;
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`;
+      // Data privacy: Log only first 10 chars
+      console.log('Attaching Token:', token.substring(0, 10) + '...');
+    } else {
+      console.warn('No token found in Redux state for request:', config.url);
     }
     return config;
   },
