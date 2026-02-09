@@ -269,17 +269,7 @@ export const LoginModal = () => {
                                     </form>
                                 )}
 
-                                <p className="text-xs text-center text-gray-400 mt-6 px-8">
-                                    By continuing, you agree to our
-                                    <a href="/terms" className="text-black hover:underline mx-1">Terms of Service</a>
-                                    &
-                                    <a href="/privacy" className="text-black hover:underline mx-1">Privacy Policy</a>
-                                </p>
-                            </Dialog.Panel>
-                        </Transition.Child>
-                    </div>
-                </div>
-            </Dialog>
-        </Transition>
-    );
+                                {/* Google Login Removed as per user request */}
+                            </Transition>
+                            );
 };
