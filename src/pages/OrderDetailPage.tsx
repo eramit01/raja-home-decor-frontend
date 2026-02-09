@@ -175,8 +175,8 @@ export const OrderDetailPage = () => {
                                             <img src={item.image} alt={item.name} className="w-full h-full object-contain" />
                                         </div>
                                         <div className="flex-1">
-                                            {item.product ? (
-                                                <Link to={`/product/${item.product._id}`} className="font-medium text-gray-900 hover:text-primary-600 line-clamp-2">
+                                            {item.productId ? (
+                                                <Link to={`/product/${item.productId._id}`} className="font-medium text-gray-900 hover:text-primary-600 line-clamp-2">
                                                     {item.name}
                                                 </Link>
                                             ) : (
