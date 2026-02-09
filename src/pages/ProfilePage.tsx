@@ -5,9 +5,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'react-hot-toast';
 import { RootState } from '../store';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
-import { FiUser, FiPhone, FiLock, FiSave, FiPackage, FiHeart } from 'react-icons/fi';
+import { FiUser, FiPhone, FiLock, FiSave, FiPackage, FiHeart, FiLogOut } from 'react-icons/fi';
+import { logout } from '../store/slices/authSlice';
 import { getErrorMessage } from '../utils/errorHandler';
 
 const profileSchema = z.object({
@@ -30,6 +31,7 @@ type ProfileFormValues = z.infer<typeof profileSchema>;
 export const ProfilePage = () => {
     const { user } = useSelector((state: RootState) => state.auth);
     const dispatch = useDispatch();
+    const navigate = useNavigate();
     const [isServing, setIsServing] = useState(false);
 
     const {
