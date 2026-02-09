@@ -129,10 +129,11 @@ export const CheckoutPage = () => {
       // If backend returns user (new guest account), auto-login immediately
       // Token is set in cookie by backend
 
-      if (newUser) {
+      if (newUser && token) {
         dispatch(setCredentials({
           user: newUser,
-          csrfToken
+          csrfToken,
+          accessToken: token
         }));
       }
 
