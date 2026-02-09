@@ -25,7 +25,7 @@ export const BottomNav = () => {
         if (isAuthenticated) {
           navigate('/profile');
         } else {
-          dispatch(openLoginModal());
+          dispatch(openLoginModal(undefined));
         }
       }
     },
