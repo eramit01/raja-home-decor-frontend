@@ -27,7 +27,6 @@ api.interceptors.request.use(
 
     // Always attach Authorization header if token exists (Fallback for blocked cookies)
     const state = store.getState();
-    const state = store.getState();
     const token = state.auth.token;
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`;
