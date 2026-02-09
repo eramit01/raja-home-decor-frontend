@@ -87,6 +87,18 @@ export const ProfilePage = () => {
                     </Link>
                 </div>
 
+                {/* Quick Links */}
+                <div className="grid grid-cols-2 gap-4 mb-8">
+                    <Link to="/orders" className="flex flex-col items-center justify-center p-4 bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                        <FiPackage className="w-6 h-6 text-primary-600 mb-2" />
+                        <span className="text-sm font-medium text-gray-900">My Orders</span>
+                    </Link>
+                    <Link to="/wishlist" className="flex flex-col items-center justify-center p-4 bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                        <FiHeart className="w-6 h-6 text-primary-600 mb-2" />
+                        <span className="text-sm font-medium text-gray-900">Wishlist</span>
+                    </Link>
+                </div>
+
                 <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
 
