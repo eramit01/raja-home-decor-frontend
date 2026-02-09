@@ -9,6 +9,7 @@ import { ProductService, ProductParams } from '../services/product.service';
 // import { categories } from '../data/categories';
 
 import { Product } from '../types';
+import { SEO } from '../components/SEO';
 
 export const CategoryPage = () => {
     const { categorySlug = '' } = useParams<{ categorySlug: string }>();
@@ -175,6 +176,11 @@ export const CategoryPage = () => {
 
     return (
         <div className="min-h-screen bg-gray-50">
+            <SEO
+                title={isSearchMode ? `Search Results for "${searchQuery}"` : categoryInfo?.name || categorySlug}
+                description={`Shop our collection of ${categoryInfo?.name || categorySlug}`}
+                url={window.location.href}
+            />
             {/* Category Header */}
             <div className="bg-white border-b border-gray-100">
                 <div className="container mx-auto px-4 py-4">

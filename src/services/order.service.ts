@@ -42,5 +42,15 @@ export const OrderService = {
     getOrderById: async (id: string) => {
         const response = await api.get(`/orders/${id}`);
         return response.data.data.order;
+    },
+
+    cancelOrder: async (id: string) => {
+        const response = await api.patch(`/orders/${id}/cancel`);
+        return response.data.data.order;
+    },
+
+    requestRefund: async (orderId: string, reason: string) => {
+        const response = await api.post(`/refunds/${orderId}/request`, { reason });
+        return response.data.data.order;
     }
 };

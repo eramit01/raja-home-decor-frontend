@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { RootState } from '../store';
-import { Link } from 'react-router-dom';
+import { setCredentials } from '../store/slices/authSlice';
+import { clearCart } from '../store/slices/cartSlice';
+import { Link, useNavigate } from 'react-router-dom';
 import { FiLock, FiCheck } from 'react-icons/fi';
 import { OrderService } from '../services/order.service';
 import { AddressSelector } from '../components/AddressSelector';
@@ -35,6 +37,8 @@ const loadRazorpay = () => {
 };
 
 export const CheckoutPage = () => {
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { items, total } = useSelector((state: RootState) => state.cart);
   const { user } = useSelector((state: RootState) => state.auth);
   const [paymentMethod, setPaymentMethod] = useState<'cod' | 'online'>('cod');
@@ -103,7 +107,7 @@ export const CheckoutPage = () => {
 
     try {
       // 1. Create Order
-      const { order, token } = await OrderService.createOrder({
+      const { order, token, user: newUser, csrfToken } = await OrderService.createOrder({
         items: items.map(item => ({
           productId: item.productId,
           quantity: item.quantity,
@@ -119,15 +123,24 @@ export const CheckoutPage = () => {
           pincode: data.pincode
         },
         paymentMethod
-      });
+      }) as any;
 
       // 2. Auto-Login (Guest Checkout)
-      // Token is now set in httpOnly cookie by backend, no need to store in localStorage
+      // If backend returns user (new guest account), auto-login immediately
+      // Token is set in cookie by backend
+
+      if (newUser) {
+        dispatch(setCredentials({
+          user: newUser,
+          csrfToken
+        }));
+      }
 
       // 3. Handle Payment Flow
       if (paymentMethod === 'cod') {
         toast.success(`Order Placed! ID: ${order.orderNumber}`, { id: toastId });
-        window.location.href = '/orders';
+        dispatch(clearCart());
+        navigate(`/order-success/${order._id}`);
       } else if (order.razorpayOrderId) {
         // Open Razorpay
         const options = {
@@ -147,7 +160,8 @@ export const CheckoutPage = () => {
                 razorpayOrderId: response.razorpay_order_id
               });
               toast.success('Payment Successful!', { id: toastId });
-              window.location.href = '/orders';
+              dispatch(clearCart());
+              navigate(`/order-success/${order._id}`);
             } catch (err) {
               toast.error('Payment Verification Failed', { id: toastId });
               console.error(err);

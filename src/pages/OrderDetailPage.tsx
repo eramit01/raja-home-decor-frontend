@@ -8,6 +8,7 @@ interface Order {
     orderNumber: string;
     createdAt: string;
     status: 'pending_payment' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+    refundStatus: 'none' | 'requested' | 'processed' | 'failed';
     total: number;
     paymentMethod: 'cod' | 'upi' | 'online';
     shippingAddress: {
@@ -51,6 +52,44 @@ export const OrderDetailPage = () => {
             setIsLoading(false);
         }
     };
+
+    const handleCancelOrder = async () => {
+        if (!window.confirm('Are you sure you want to cancel this order?')) return;
+        try {
+            await OrderService.cancelOrder(order?._id as string);
+            // Refresh order details
+            fetchOrderDetails(order?._id as string);
+            alert('Order cancelled successfully');
+        } catch (error: any) {
+            console.error('Failed to cancel order', error);
+            alert(error.response?.data?.message || 'Failed to cancel order');
+        }
+    };
+
+    const [isRefundModalOpen, setIsRefundModalOpen] = useState(false);
+    const [refundReason, setRefundReason] = useState('');
+    const [isSubmittingRefund, setIsSubmittingRefund] = useState(false);
+
+    const handleRequestRefund = async () => {
+        if (!refundReason.trim()) {
+            alert('Please provide a reason for the refund');
+            return;
+        }
+        setIsSubmittingRefund(true);
+        try {
+            await OrderService.requestRefund(order?._id as string, refundReason);
+            alert('Refund requested successfully');
+            setIsRefundModalOpen(false);
+            fetchOrderDetails(order?._id as string);
+        } catch (error: any) {
+            console.error('Failed to request refund', error);
+            alert(error.response?.data?.message || 'Failed to request refund');
+        } finally {
+            setIsSubmittingRefund(false);
+        }
+    };
+
+
 
     if (isLoading) {
         return (
@@ -105,6 +144,16 @@ export const OrderDetailPage = () => {
                             }`}>
                             {order.status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
                         </div>
+
+                        {/* Cancel Button */}
+                        {['pending_payment', 'confirmed', 'processing'].includes(order.status) && (
+                            <button
+                                onClick={handleCancelOrder}
+                                className="bg-red-50 text-red-600 border border-red-200 px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-100 transition-colors"
+                            >
+                                Cancel Order
+                            </button>
+                        )}
                     </div>
                 </div>
 
@@ -126,9 +175,15 @@ export const OrderDetailPage = () => {
                                             <img src={item.image} alt={item.name} className="w-full h-full object-contain" />
                                         </div>
                                         <div className="flex-1">
-                                            <Link to={`/product/${item.productId._id}`} className="font-medium text-gray-900 hover:text-primary-600 line-clamp-2">
-                                                {item.name}
-                                            </Link>
+                                            {item.product ? (
+                                                <Link to={`/product/${item.product._id}`} className="font-medium text-gray-900 hover:text-primary-600 line-clamp-2">
+                                                    {item.name}
+                                                </Link>
+                                            ) : (
+                                                <span className="font-medium text-gray-900 line-clamp-2">
+                                                    {item.name}
+                                                </span>
+                                            )}
                                             <div className="mt-2 flex justify-between items-center">
                                                 <span className="text-sm text-gray-500">Qty: {item.quantity}</span>
                                                 <span className="font-bold text-gray-900">₹{(item.price * item.quantity).toLocaleString()}</span>
@@ -196,6 +251,40 @@ export const OrderDetailPage = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Refund Modal */}
+            {isRefundModalOpen && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                    <div className="bg-white rounded-xl max-w-md w-full p-6">
+                        <h3 className="text-lg font-bold text-gray-900 mb-4">Request Refund</h3>
+                        <p className="text-sm text-gray-500 mb-4">
+                            Please confirm why you want to return this order.
+                        </p>
+                        <textarea
+                            value={refundReason}
+                            onChange={(e) => setRefundReason(e.target.value)}
+                            placeholder="Reason for refund..."
+                            className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none mb-4"
+                            rows={4}
+                        />
+                        <div className="flex justify-end gap-3">
+                            <button
+                                onClick={() => setIsRefundModalOpen(false)}
+                                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg text-sm font-medium"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleRequestRefund}
+                                disabled={isSubmittingRefund}
+                                className="px-4 py-2 bg-black text-white rounded-lg text-sm font-medium hover:bg-gray-800 disabled:opacity-50"
+                            >
+                                {isSubmittingRefund ? 'Submitting...' : 'Submit Request'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

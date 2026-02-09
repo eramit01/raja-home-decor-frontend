@@ -14,26 +14,52 @@ export const ReviewsSection = ({ productId }: ReviewsSectionProps) => {
     const [isLoading, setIsLoading] = useState(true);
     const [showForm, setShowForm] = useState(false);
     const [formData, setFormData] = useState({ rating: 5, title: '', comment: '' });
+    const [images, setImages] = useState<File[]>([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
         const fetchReviews = async () => {
-            if (!productId) return;
-            const data = await ReviewService.getProductReviews(productId);
-            setReviews(data);
-            setIsLoading(false);
+            if (!productId) {
+                setIsLoading(false);
+                return;
+            }
+            try {
+                const data = await ReviewService.getProductReviews(productId);
+                setReviews(data);
+            } catch (error) {
+                console.error('Error fetching reviews:', error);
+            } finally {
+                setIsLoading(false);
+            }
         };
         fetchReviews();
     }, [productId]);
+
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files) {
+            setImages(Array.from(e.target.files));
+        }
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
         try {
-            const newReview = await ReviewService.createReview({ ...formData, productId });
+            const data = new FormData();
+            data.append('productId', productId);
+            data.append('rating', formData.rating.toString());
+            data.append('title', formData.title);
+            data.append('comment', formData.comment);
+
+            images.forEach((image) => {
+                data.append('images', image);
+            });
+
+            const newReview = await ReviewService.createReview(data);
             setReviews(prev => [newReview, ...prev]);
             setShowForm(false);
             setFormData({ rating: 5, title: '', comment: '' });
+            setImages([]);
             alert('Review submitted successfully!');
         } catch (error: any) {
             alert(error.response?.data?.message || 'Failed to submit review');
@@ -101,6 +127,23 @@ export const ReviewsSection = ({ productId }: ReviewsSectionProps) => {
                         />
                     </div>
 
+                    <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Add Photos (Max 5)</label>
+                        <input
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            onChange={handleImageChange}
+                            className="w-full text-sm text-gray-500
+                                file:mr-4 file:py-2 file:px-4
+                                file:rounded-full file:border-0
+                                file:text-sm file:font-semibold
+                                file:bg-primary-50 file:text-primary-700
+                                hover:file:bg-primary-100"
+                        />
+                        <p className="mt-1 text-xs text-gray-500">{images.length} images selected</p>
+                    </div>
+
                     <div className="flex justify-end">
                         <button
                             type="submit"
@@ -129,18 +172,34 @@ export const ReviewsSection = ({ productId }: ReviewsSectionProps) => {
                                 <div className="bg-green-600 text-white px-2 py-0.5 rounded text-xs font-bold flex items-center gap-1">
                                     {review.rating} <FiStar className="fill-current" size={10} />
                                 </div>
-                                <span className="font-bold text-gray-900">{review.title}</span>
+                                {review.title && <span className="font-bold text-gray-900">{review.title}</span>}
                             </div>
                             <p className="text-gray-600 text-sm mb-3 leading-relaxed">{review.comment}</p>
+
+                            {/* Review Images */}
+                            {review.images && review.images.length > 0 && (
+                                <div className="flex gap-2 mb-3 overflow-x-auto pb-2">
+                                    {review.images.map((img, idx) => (
+                                        <img
+                                            key={idx}
+                                            src={img}
+                                            alt={`Review by ${review.user?.name || review.manualName || 'User'}`}
+                                            className="w-16 h-16 object-cover rounded-lg border border-gray-200 cursor-pointer hover:opacity-90"
+                                            onClick={() => window.open(img, '_blank')}
+                                        />
+                                    ))}
+                                </div>
+                            )}
+
                             <div className="flex items-center gap-2 text-xs text-gray-400">
                                 <div className="flex items-center gap-1 text-gray-500 font-medium">
                                     <FiUser size={12} />
-                                    {review.user?.name || 'Anonymous User'}
+                                    {review.user?.name || review.manualName || 'Anonymous User'}
                                 </div>
                                 <span>•</span>
                                 <div className="flex items-center gap-1 text-green-600">
                                     <FiCheckCircle size={10} />
-                                    Certified Buyer
+                                    {review.isVerified ? 'Verified Purchase' : 'Review'}
                                 </div>
                                 <span>•</span>
                                 <span>{new Date(review.createdAt).toLocaleDateString()}</span>

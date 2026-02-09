@@ -12,7 +12,8 @@ export const BottomNav = () => {
   const navItems = [
     { path: '/', icon: FiHome, label: 'Home' },
     { path: '/products', icon: FiGrid, label: 'Category' },
-    { path: '/cart', icon: FiShoppingCart, label: 'Cart', badge: cartItemCount },
+    // Only show cart if authenticated
+    ...(isAuthenticated ? [{ path: '/cart', icon: FiShoppingCart, label: 'Cart', badge: cartItemCount }] : []),
     { path: isAuthenticated ? '/orders' : '/login', icon: FiUser, label: isAuthenticated ? 'Account' : 'Login' },
   ];
 

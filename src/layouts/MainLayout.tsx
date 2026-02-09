@@ -14,7 +14,7 @@ import { categories } from '../data/categories';
 
 import { AnnouncementBar } from '../components/AnnouncementBar';
 import { Footer } from '../components/Footer';
-import { WhatsAppButton } from '../components/WhatsAppButton';
+import { ScrollToTop } from '../components/ScrollToTop';
 
 export const MainLayout = () => {
   const location = useLocation();
@@ -67,8 +67,7 @@ export const MainLayout = () => {
       {/* Mobile bottom navigation */}
       {showBottomNav && <BottomNav />}
 
-      {/* Floating WhatsApp Button */}
-      <WhatsAppButton />
+      <ScrollToTop />
 
       {/* Global Cart Drawer */}
       <CartDrawer />

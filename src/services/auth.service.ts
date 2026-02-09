@@ -27,6 +27,22 @@ export interface AuthResponse {
 }
 
 export const authService = {
+  checkUser: async (phone: string) => {
+    const response = await api.post('/auth/check-user', { phone });
+    return response.data;
+  },
+
+  register: async (data: { phone: string; password?: string; name: string }) => {
+    const response = await api.post('/auth/register', data);
+    return response.data;
+  },
+
+  login: async (data: { phone: string; password?: string }) => {
+    const response = await api.post('/auth/login', data);
+    return response.data;
+  },
+
+  // Deprecated but kept for type safety if needed temporarily
   sendOTP: async (data: SendOTPRequest) => {
     const response = await api.post('/auth/send-otp', data);
     return response.data;

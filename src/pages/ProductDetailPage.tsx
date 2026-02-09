@@ -19,6 +19,7 @@ import { RelatedProducts } from '../components/product-detail/RelatedProducts';
 import { FiShoppingBag, FiZap, FiAlertCircle } from 'react-icons/fi';
 import { openLoginModal } from '../store/slices/uiSlice';
 import { toast } from 'react-hot-toast';
+import { SEO } from '../components/SEO';
 
 export const ProductDetailPage = () => {
   const { id } = useParams();
@@ -42,8 +43,8 @@ export const ProductDetailPage = () => {
           ...data,
           id: data._id,
           title: data.name,
-          rating: data.rating || 4.5,
-          totalReviews: data.reviews?.length || 0,
+          rating: data.product?.rating || data.rating || 4.5,
+          totalReviews: data.product?.totalReviews || data.totalReviews || 0,
           originalPrice: data.price * 1.2,
           category: data.category || 'General',
         };
@@ -122,6 +123,12 @@ export const ProductDetailPage = () => {
 
   return (
     <div className="bg-gray-100 min-h-screen pb-24 md:pb-0 relative">
+      <SEO
+        title={product.title}
+        description={product.description || `Buy ${product.title} online at best price.`}
+        image={product.images?.[0]}
+        url={window.location.href}
+      />
       <DesktopStickyHeader
         title={product.title}
         image={product.images[0]}
@@ -159,17 +166,19 @@ export const ProductDetailPage = () => {
             <div className="hidden md:flex gap-3 mt-4">
               <button
                 onClick={handleAddToCart}
-                className="flex-1 bg-[#ff9f00] hover:bg-[#ff9000] text-white py-4 font-bold text-base uppercase shadow-sm rounded-sm flex items-center justify-center gap-2 transition-transform active:scale-[0.98]"
+                disabled={product.stock <= 0}
+                className={`flex-1 py-4 font-bold text-base uppercase shadow-sm rounded-sm flex items-center justify-center gap-2 transition-transform active:scale-[0.98] ${product.stock <= 0 ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#ff9f00] hover:bg-[#ff9000] text-white'}`}
               >
                 <FiShoppingBag className="w-5 h-5" />
-                {isAuthenticated ? 'Add to Cart' : 'Login to Add'}
+                {product.stock <= 0 ? 'Out of Stock' : (isAuthenticated ? 'Add to Cart' : 'Login to Add')}
               </button>
               <button
                 onClick={handleBuyNow}
-                className="flex-1 bg-[#fb641b] hover:bg-[#fb541b] text-white py-4 font-bold text-base uppercase shadow-sm rounded-sm flex items-center justify-center gap-2 transition-transform active:scale-[0.98]"
+                disabled={product.stock <= 0}
+                className={`flex-1 py-4 font-bold text-base uppercase shadow-sm rounded-sm flex items-center justify-center gap-2 transition-transform active:scale-[0.98] ${product.stock <= 0 ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#fb641b] hover:bg-[#fb541b] text-white'}`}
               >
                 <FiZap className="w-5 h-5" />
-                {isAuthenticated ? 'Buy Now' : 'Login to Buy'}
+                {product.stock <= 0 ? 'Out of Stock' : (isAuthenticated ? 'Buy Now' : 'Login to Buy')}
               </button>
             </div>
           </div>
