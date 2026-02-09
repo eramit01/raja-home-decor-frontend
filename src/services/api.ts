@@ -24,6 +24,13 @@ api.interceptors.request.use(
         config.headers['X-CSRF-Token'] = csrfToken;
       }
     }
+
+    // Always attach Authorization header if token exists (Fallback for blocked cookies)
+    const state = store.getState();
+    const token = state.auth.token;
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
     return config;
   },
   (error) => {
