@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { FiStar } from 'react-icons/fi';
+import { api } from '../../services/api';
 
 interface Review {
     _id: string;
@@ -23,10 +24,8 @@ export const ReviewsSection = ({ productId }: ReviewsSectionProps) => {
         const fetchReviews = async () => {
             try {
                 setLoading(true);
-                const response = await fetch(
-                    `http://localhost:5000/api/v1/reviews/product/${productId}?page=${page}&limit=5`
-                );
-                const data = await response.json();
+                const response = await api.get(`/reviews/product/${productId}?page=${page}&limit=5`);
+                const data = response.data;
 
                 if (data.success) {
                     setReviews(data.data.reviews);

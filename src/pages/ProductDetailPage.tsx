@@ -18,6 +18,7 @@ import { FAQSection } from '../components/product-detail/FAQSection';
 import { RelatedProducts } from '../components/product-detail/RelatedProducts';
 import { StickyBottomBar } from '../components/product-detail/StickyBottomBar';
 import { EnhancedPriceBreakdown } from '../components/product-detail/EnhancedPriceBreakdown';
+import { api } from '../services/api';
 
 interface Product {
   _id: string;
@@ -71,8 +72,8 @@ const ProductDetailPage = () => {
     const fetchProduct = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`http://localhost:5000/api/v1/products/${id}`);
-        const data = await response.json();
+        const response = await api.get(`/products/${id}`);
+        const data = response.data;
 
         if (data.success) {
           setProduct(data.data.product);

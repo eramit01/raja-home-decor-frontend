@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { FiStar } from 'react-icons/fi';
+import { api } from '../../services/api';
 
 interface Product {
     _id: string;
@@ -24,10 +25,8 @@ export const RelatedProducts = ({ productId, categoryId }: RelatedProductsProps)
         const fetchRelatedProducts = async () => {
             try {
                 setLoading(true);
-                const response = await fetch(
-                    `http://localhost:5000/api/v1/products/${productId}/related?limit=10`
-                );
-                const data = await response.json();
+                const response = await api.get(`/products/${productId}/related?limit=10`);
+                const data = response.data;
 
                 if (data.success) {
                     setProducts(data.data.products);
