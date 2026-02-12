@@ -44,7 +44,7 @@ interface Product {
     discountPercent?: number;
   }>;
   lidOption?: { enabled: boolean; price: number };
-  allowMixedFragrance?: boolean;
+  productType?: 'simple' | 'configurable';
   faqs?: Array<{ question: string; answer: string }>;
 }
 
