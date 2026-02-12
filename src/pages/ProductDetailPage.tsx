@@ -201,11 +201,11 @@ const ProductDetailPage = () => {
 
           {/* Right Column: Product Info & Controls */}
           <div className="lg:col-span-7 xl:col-span-7 mt-0">
-            <div className="bg-white lg:rounded-2xl lg:shadow-sm lg:p-8 flex flex-col gap-8">
+            <div className="bg-white lg:rounded-2xl lg:shadow-sm p-4 lg:p-8 flex flex-col gap-4 lg:gap-8">
 
               {/* Desktop Header: Title & Pricing */}
               <div>
-                <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 leading-tight">
+                <h1 className="text-xl lg:text-3xl font-bold text-gray-900 leading-tight">
                   {product.name}
                 </h1>
 
@@ -314,7 +314,7 @@ const ProductDetailPage = () => {
         </div>
 
         {/* Bottom Full-Width Sections (Reviews, FAQ, Related) */}
-        <div className="mt-8 lg:mt-12 space-y-12">
+        <div className="mt-8 lg:mt-12 space-y-6 lg:space-y-12">
 
           {/* Mobile-only short description */}
           <div className="lg:hidden px-4">
@@ -326,12 +326,12 @@ const ProductDetailPage = () => {
             />
           </div>
 
-          <div className="bg-white lg:rounded-2xl lg:shadow-sm lg:p-8 px-4 py-8">
+          <div className="bg-white lg:rounded-2xl lg:shadow-sm px-4 py-6 lg:p-8">
             <ReviewsSection productId={product._id} />
           </div>
 
           {product.faqs && product.faqs.length > 0 && (
-            <div className="bg-white lg:rounded-2xl lg:shadow-sm lg:p-8 px-4 py-8">
+            <div className="bg-white lg:rounded-2xl lg:shadow-sm px-4 py-6 lg:p-8">
               <FAQSection faqs={product.faqs} />
             </div>
           )}
