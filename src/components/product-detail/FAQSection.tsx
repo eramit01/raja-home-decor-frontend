@@ -1,53 +1,51 @@
+import { useState } from 'react';
+import { FiChevronDown } from 'react-icons/fi';
 
-import { Disclosure } from '@headlessui/react'
-import { FiChevronUp } from 'react-icons/fi'
+interface FAQ {
+    question: string;
+    answer: string;
+}
 
-const dummyFAQs = [
-    {
-        question: "What is the burn time?",
-        answer: "The burn time is approximately 20-25 hours under standard conditions."
-    },
-    {
-        question: "Is the fragrance strong?",
-        answer: "Yes, it has a medium-strong throw, perfect for bedrooms and living rooms."
-    },
-    {
-        question: "Is the glass heat resistant?",
-        answer: "Yes, we use high-quality heat-resistant glass aimed for safe candle burning."
-    },
-    {
-        question: "Can I order in bulk?",
-        answer: "Absolutely! We offer factory pricing for bulk orders. Please use the 'Bulk Enquiry' button."
-    },
-    {
-        question: "What is the return policy?",
-        answer: "We offer easy replacements for any damaged items received during transit."
-    }
-]
+interface FAQSectionProps {
+    faqs: FAQ[];
+}
 
-export const FAQSection = () => {
+export const FAQSection = ({ faqs }: FAQSectionProps) => {
+    const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
+
     return (
-        <div className="bg-white px-4 py-6 mb-2">
-            <h3 className="text-md font-bold text-gray-900 mb-4">Frequently Asked Questions</h3>
+        <div className="space-y-4">
+            <h3 className="text-lg font-bold text-gray-900">Frequently Asked Questions</h3>
+
             <div className="space-y-2">
-                {dummyFAQs.map((faq, index) => (
-                    <Disclosure key={index} as="div" className="border border-gray-100 rounded-lg overflow-hidden">
-                        {({ open }) => (
-                            <>
-                                <Disclosure.Button className="flex w-full justify-between bg-gray-50 px-4 py-3 text-left text-sm font-medium text-gray-900 hover:bg-gray-100 focus:outline-none focus-visible:ring focus-visible:ring-purple-500/75">
-                                    <span>{faq.question}</span>
-                                    <FiChevronUp
-                                        className={`${open ? 'rotate-180 transform' : ''
-                                            } h-5 w-5 text-gray-500 transition-transform duration-200`}
-                                    />
-                                </Disclosure.Button>
-                                <Disclosure.Panel className="px-4 pb-4 pt-2 text-sm text-gray-600 leading-relaxed">
-                                    {faq.answer}
-                                </Disclosure.Panel>
-                            </>
-                        )}
-                    </Disclosure>
-                ))}
+                {faqs.map((faq, index) => {
+                    const isExpanded = expandedIndex === index;
+
+                    return (
+                        <div
+                            key={index}
+                            className="border border-gray-200 rounded-xl overflow-hidden"
+                        >
+                            <button
+                                onClick={() => setExpandedIndex(isExpanded ? null : index)}
+                                className="w-full px-4 py-4 flex items-center justify-between text-left hover:bg-gray-50 transition-colors"
+                            >
+                                <span className="font-medium text-gray-900 pr-4">{faq.question}</span>
+                                <FiChevronDown
+                                    className={`flex-shrink-0 transition-transform ${isExpanded ? 'rotate-180' : ''
+                                        }`}
+                                    size={20}
+                                />
+                            </button>
+
+                            {isExpanded && (
+                                <div className="px-4 pb-4 text-sm text-gray-700 leading-relaxed border-t border-gray-100">
+                                    <div className="pt-3">{faq.answer}</div>
+                                </div>
+                            )}
+                        </div>
+                    );
+                })}
             </div>
         </div>
     );

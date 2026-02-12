@@ -1,13 +1,10 @@
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { FiHome, FiGrid, FiUser, FiShoppingCart } from 'react-icons/fi';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { RootState } from '../store';
-import { openLoginModal } from '../store/slices/uiSlice';
 
 export const BottomNav = () => {
   const location = useLocation();
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
   const { items } = useSelector((state: RootState) => state.cart);
   const { isAuthenticated } = useSelector((state: RootState) => state.auth);
   const cartItemCount = items.reduce((sum, item) => sum + item.quantity, 0);
@@ -15,20 +12,8 @@ export const BottomNav = () => {
   const navItems = [
     { path: '/', icon: FiHome, label: 'Home' },
     { path: '/products', icon: FiGrid, label: 'Category' },
-    // Only show cart if authenticated
-    ...(isAuthenticated ? [{ path: '/cart', icon: FiShoppingCart, label: 'Cart', badge: cartItemCount }] : []),
-    {
-      path: '/profile', // Default path for active check
-      icon: FiUser,
-      label: isAuthenticated ? 'Account' : 'Login',
-      action: () => {
-        if (isAuthenticated) {
-          navigate('/profile');
-        } else {
-          dispatch(openLoginModal(undefined));
-        }
-      }
-    },
+    { path: '/cart', icon: FiShoppingCart, label: 'Cart', badge: cartItemCount },
+    { path: isAuthenticated ? '/orders' : '/login', icon: FiUser, label: isAuthenticated ? 'Account' : 'Login' },
   ];
 
   return (
@@ -37,27 +22,6 @@ export const BottomNav = () => {
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = location.pathname === item.path;
-
-          if (item.action) {
-            return (
-              <button
-                key={item.label}
-                onClick={item.action}
-                className={`flex flex-col items-center justify-center px-4 py-2 ${isActive ? 'text-primary-600' : 'text-gray-600'
-                  }`}
-              >
-                <div className="relative">
-                  <Icon className="text-xl" />
-                  {item.badge && item.badge > 0 && (
-                    <span className="absolute -top-2 -right-2 bg-primary-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                      {item.badge}
-                    </span>
-                  )}
-                </div>
-                <span className="text-xs mt-1">{item.label}</span>
-              </button>
-            );
-          }
 
           return (
             <Link
@@ -68,7 +32,7 @@ export const BottomNav = () => {
             >
               <div className="relative">
                 <Icon className="text-xl" />
-                {item.badge && (item.badge as number) > 0 && (
+                {item.badge && item.badge > 0 && (
                   <span className="absolute -top-2 -right-2 bg-primary-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                     {item.badge}
                   </span>

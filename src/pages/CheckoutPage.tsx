@@ -1,12 +1,10 @@
 import { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { RootState } from '../store';
-import { setCredentials } from '../store/slices/authSlice';
-import { clearCart } from '../store/slices/cartSlice';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { FiLock, FiCheck } from 'react-icons/fi';
 import { OrderService } from '../services/order.service';
 import { AddressSelector } from '../components/AddressSelector';
@@ -37,8 +35,6 @@ const loadRazorpay = () => {
 };
 
 export const CheckoutPage = () => {
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
   const { items, total } = useSelector((state: RootState) => state.cart);
   const { user } = useSelector((state: RootState) => state.auth);
   const [paymentMethod, setPaymentMethod] = useState<'cod' | 'online'>('cod');
@@ -107,7 +103,7 @@ export const CheckoutPage = () => {
 
     try {
       // 1. Create Order
-      const { order, token, user: newUser, csrfToken } = await OrderService.createOrder({
+      const { order, token } = await OrderService.createOrder({
         items: items.map(item => ({
           productId: item.productId,
           quantity: item.quantity,
@@ -123,25 +119,15 @@ export const CheckoutPage = () => {
           pincode: data.pincode
         },
         paymentMethod
-      }) as any;
+      });
 
       // 2. Auto-Login (Guest Checkout)
-      // If backend returns user (new guest account), auto-login immediately
-      // Token is set in cookie by backend
-
-      if (newUser && token) {
-        dispatch(setCredentials({
-          user: newUser,
-          csrfToken,
-          accessToken: token
-        }));
-      }
+      // Token is now set in httpOnly cookie by backend, no need to store in localStorage
 
       // 3. Handle Payment Flow
       if (paymentMethod === 'cod') {
         toast.success(`Order Placed! ID: ${order.orderNumber}`, { id: toastId });
-        dispatch(clearCart());
-        navigate(`/order-success/${order._id}`);
+        window.location.href = '/orders';
       } else if (order.razorpayOrderId) {
         // Open Razorpay
         const options = {
@@ -161,8 +147,7 @@ export const CheckoutPage = () => {
                 razorpayOrderId: response.razorpay_order_id
               });
               toast.success('Payment Successful!', { id: toastId });
-              dispatch(clearCart());
-              navigate(`/order-success/${order._id}`);
+              window.location.href = '/orders';
             } catch (err) {
               toast.error('Payment Verification Failed', { id: toastId });
               console.error(err);
@@ -382,13 +367,40 @@ export const CheckoutPage = () => {
 
               <div className="max-h-60 overflow-y-auto no-scrollbar space-y-4 mb-4 pr-1">
                 {items.map((item) => (
-                  <div key={item.productId} className="flex gap-3 py-2 border-b border-gray-50 last:border-0">
+                  <div key={item.id} className="flex gap-3 py-3 border-b border-gray-50 last:border-0">
                     <div className="w-14 h-14 bg-gray-50 rounded-md overflow-hidden flex-shrink-0 border border-gray-100">
                       <img src={item.image} alt={item.name} className="w-full h-full object-contain" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 line-clamp-1">{item.name}</p>
-                      <p className="text-xs text-gray-500 mt-0.5">Qty: {item.quantity}</p>
+                      <p className="text-sm font-bold text-gray-900 line-clamp-2 leading-tight">{item.name}</p>
+
+                      {/* Breakdown Display */}
+                      <div className="text-xs text-gray-500 mt-1 space-y-0.5">
+                        {item.breakdown ? (
+                          <>
+                            {item.breakdown.multiplier > 1 && (
+                              <span className="block text-green-700 font-bold">Pack of {item.breakdown.multiplier}</span>
+                            )}
+                            {item.breakdown.attributes.map(attr => (
+                              <div key={attr.key} className="flex gap-1">
+                                <span className="font-medium">{attr.key}:</span> {attr.value}
+                              </div>
+                            ))}
+                            {item.breakdown.addOns.length > 0 && (
+                              <div className="text-purple-700 truncate">
+                                + {item.breakdown.addOns.join(', ')}
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          // Fallback
+                          item.selectedAttributes && Object.entries(item.selectedAttributes).map(([k, v]) => (
+                            <div key={k}>{k}: {v}</div>
+                          ))
+                        )}
+                      </div>
+
+                      <p className="text-xs font-semibold text-gray-400 mt-1">Qty: {item.quantity}</p>
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-bold text-gray-900">₹{(item.price * item.quantity).toLocaleString()}</p>

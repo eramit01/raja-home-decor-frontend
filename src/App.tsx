@@ -2,7 +2,7 @@ import { Routes, Route } from 'react-router-dom';
 import { MainLayout } from './layouts/MainLayout';
 import { HomePage } from './pages/HomePage';
 import { ProductListPage } from './pages/ProductListPage';
-import { ProductDetailPage } from './pages/ProductDetailPage';
+import ProductDetailPage from './pages/ProductDetailPage';
 import { CartPage } from './pages/CartPage';
 import { CheckoutPage } from './pages/CheckoutPage';
 import { OrdersPage } from './pages/OrdersPage';
@@ -15,7 +15,6 @@ import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage';
 import { TermsPage } from './pages/TermsPage';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { OrderDetailPage } from './pages/OrderDetailPage';
-import { OrderSuccessPage } from './pages/OrderSuccessPage';
 import { ProfilePage } from './pages/ProfilePage';
 
 function App() {
@@ -26,14 +25,7 @@ function App() {
         <Route path="products" element={<ProductListPage />} />
         <Route path="product/:id" element={<ProductDetailPage />} />
         <Route path="category/:categorySlug" element={<CategoryPage />} />
-        <Route
-          path="cart"
-          element={
-            <ProtectedRoute>
-              <CartPage />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="cart" element={<CartPage />} />
         <Route path="login" element={<LoginPage />} />
         <Route path="bulk-enquiry" element={<BulkEnquiryPage />} />
         <Route path="faq" element={<FAQPage />} />
@@ -69,14 +61,6 @@ function App() {
           element={
             <ProtectedRoute>
               <OrderDetailPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="order-success/:orderId"
-          element={
-            <ProtectedRoute>
-              <OrderSuccessPage />
             </ProtectedRoute>
           }
         />

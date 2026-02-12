@@ -1,264 +1,357 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../store';
-import { addToCart, openCart } from '../store/slices/cartSlice';
-import { ProductService } from '../services/product.service';
-import { generateDefaultSections } from '../utils/productAdapter';
-import { Product } from '../types';
-import { ProductInfo } from '../components/product-detail/ProductInfo';
-import { ProductImageGallery } from '../components/product-detail/ProductImageGallery';
-import { StickyCTABar } from '../components/product-detail/StickyCTABar';
-import { DesktopStickyHeader } from '../components/product-detail/DesktopStickyHeader';
-import { SectionRenderer } from '../components/SectionRenderer';
-import { DeliveryChecker } from '../components/product-detail/DeliveryChecker';
-import { TrustStrip } from '../components/product-detail/TrustStrip';
-import { ReviewsSection } from '../components/product-detail/ReviewsSection';
-import '../components/product-detail/gallery.css';
-import { RelatedProducts } from '../components/product-detail/RelatedProducts';
-import { FiShoppingBag, FiZap, FiAlertCircle } from 'react-icons/fi';
+import { addToCart } from '../store/slices/cartSlice';
 import { openLoginModal } from '../store/slices/uiSlice';
 import { toast } from 'react-hot-toast';
-import { SEO } from '../components/SEO';
 
-export const ProductDetailPage = () => {
-  const { id } = useParams();
-  const dispatch = useDispatch();
+// Components (to be created)
+import { ImageGallery } from '../components/product-detail/ImageGallery';
+import { PricingBlock } from '../components/product-detail/PricingBlock';
+import { RatingsSummary } from '../components/product-detail/RatingsSummary';
+import { SizeSelector } from '../components/product-detail/SizeSelector';
+import { PackSelector } from '../components/product-detail/PackSelector';
+import { ProductDescription } from '../components/product-detail/ProductDescription';
+import { ReviewsSection } from '../components/product-detail/ReviewsSection';
+import { FAQSection } from '../components/product-detail/FAQSection';
+import { RelatedProducts } from '../components/product-detail/RelatedProducts';
+import { StickyBottomBar } from '../components/product-detail/StickyBottomBar';
+import { EnhancedPriceBreakdown } from '../components/product-detail/EnhancedPriceBreakdown';
+
+interface Product {
+  _id: string;
+  name: string;
+  description: string;
+  shortDescription?: string;
+  images: string[];
+  price: number;
+  originalPrice?: number;
+  stock: number;
+  rating: number;
+  totalReviews: number;
+  category: { _id: string; name: string; slug: string };
+
+  // Mobile PDP specific
+  sizes?: Array<{ name: string; price: number }>;
+  fragrances?: string[];
+  packs?: Array<{
+    label: string;
+    quantity: number;
+    pricingType: 'auto' | 'discount' | 'fixed';
+    fixedPrice?: number;
+    discountPercent?: number;
+  }>;
+  lidOption?: { enabled: boolean; price: number };
+  allowMixedFragrance?: boolean;
+  faqs?: Array<{ question: string; answer: string }>;
+}
+
+const ProductDetailPage = () => {
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { isCartOpen } = useSelector((state: RootState) => state.cart);
-  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
+  const dispatch = useDispatch();
+  const { user } = useSelector((state: RootState) => state.auth);
 
+  // Product state
   const [product, setProduct] = useState<Product | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [selectedPackId, setSelectedPackId] = useState<string | undefined>('pack-1');
+  const [loading, setLoading] = useState(true);
 
+  // Selection state
+  const [selectedSize, setSelectedSize] = useState<{ name: string; price: number } | null>(null);
+  const [selectedPack, setSelectedPack] = useState<number>(0); // Pack index
+  const [selectedFragrance, setSelectedFragrance] = useState<string>('');
+  const [includeLid, setIncludeLid] = useState(false);
+
+  // UI state
+  const [showFullDescription, setShowFullDescription] = useState(false);
+
+  // Fetch product
   useEffect(() => {
     const fetchProduct = async () => {
-      if (!id) return;
-      setIsLoading(true);
       try {
-        const data = await ProductService.getProductById(id);
-        // Adapt backend data
-        const adaptedPlain: Product = {
-          ...data,
-          id: data._id,
-          title: data.name,
-          rating: data.product?.rating || data.rating || 4.5,
-          totalReviews: data.product?.totalReviews || data.totalReviews || 0,
-          originalPrice: data.price * 1.2,
-          category: data.category || 'General',
-        };
-        // Add generated sections
-        (adaptedPlain as any).sections = generateDefaultSections(adaptedPlain);
+        setLoading(true);
+        const response = await fetch(`http://localhost:5000/api/v1/products/${id}`);
+        const data = await response.json();
 
-        setProduct(adaptedPlain);
+        if (data.success) {
+          setProduct(data.data.product);
+
+          // Set default selections
+          if (data.data.product.sizes && data.data.product.sizes.length > 0) {
+            setSelectedSize(data.data.product.sizes[0]);
+          }
+        }
       } catch (error) {
-        console.error("Failed to fetch product details", error);
+        console.error('Failed to fetch product:', error);
+        toast.error('Failed to load product');
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
     };
-    fetchProduct();
-    window.scrollTo(0, 0);
+
+    if (id) {
+      fetchProduct();
+    }
   }, [id]);
 
-  if (isLoading) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
-  }
+  // Calculate final price
+  const calculateFinalPrice = (): number => {
+    if (!product) return 0;
 
-  // Handle "Not Found" case
-  if (!product) {
+    let basePrice = selectedSize ? selectedSize.price : product.price;
+
+    // Add lid price if selected
+    if (includeLid && product.lidOption?.enabled) {
+      basePrice += product.lidOption.price;
+    }
+
+    // Apply pack multiplier
+    if (product.packs && product.packs.length > 0) {
+      const pack = product.packs[selectedPack];
+
+      switch (pack.pricingType) {
+        case 'fixed':
+          return pack.fixedPrice || basePrice * pack.quantity;
+        case 'discount':
+          if (pack.discountPercent) {
+            return basePrice * pack.quantity * (1 - pack.discountPercent / 100);
+          }
+          return basePrice * pack.quantity;
+        case 'auto':
+        default:
+          return basePrice * pack.quantity;
+      }
+    }
+
+    return basePrice;
+  };
+
+  // Handle Add to Cart
+  const handleAddToCart = () => {
+    if (!user) {
+      dispatch(openLoginModal());
+      return;
+    }
+
+    if (!product) return;
+
+    // Validation
+    if (product.packs && product.packs.length > 0 && !selectedFragrance) {
+      toast.error('Please select a fragrance');
+      return;
+    }
+
+    const cartItem = {
+      productId: product._id,
+      name: product.name,
+      image: product.images[0],
+      price: calculateFinalPrice(),
+      quantity: 1,
+      size: selectedSize?.name,
+      pack: product.packs?.[selectedPack]?.label,
+      fragrance: selectedFragrance,
+      includeLid
+    };
+
+    dispatch(addToCart(cartItem));
+    toast.success('Added to cart!');
+  };
+
+  // Handle Buy Now
+  const handleBuyNow = () => {
+    handleAddToCart();
+    navigate('/cart');
+  };
+
+  if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center flex-col gap-4">
-        <h2 className="text-2xl font-bold">Product not found</h2>
-        <p className="text-gray-600">The product "{id}" could not be found.</p>
-        <button onClick={() => window.history.back()} className="text-blue-600 underline">Go Back</button>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
       </div>
     );
   }
 
-  // Handle Pack Selection Logic (if relevant)
-  // Check if sections exists on product type or cast to any if extended
-  const sections = (product as any).sections || [];
-  const packSection = sections.find((s: any) => s.type === 'pack_selection');
-  const packs = packSection?.data?.packs || [];
-  const selectedPack = packs.find((p: any) => p.id === selectedPackId) || packs[0];
-
-  const currentPrice = selectedPack ? selectedPack.price : product.price;
-  const currentOriginalPrice = selectedPack ? (selectedPack.originalPrice || selectedPack.price) : product.originalPrice;
-  const currentTitle = selectedPack ? `${product.title} - ${selectedPack.label}` : product.title;
-
-  const getCartItem = () => ({
-    productId: product.id,
-    name: currentTitle,
-    image: product.images[0],
-    price: currentPrice,
-    originalPrice: currentOriginalPrice,
-    quantity: 1,
-    attributes: {
-      pack: selectedPack?.label,
-    }
-  });
-
-  // Handle Pack Selection Logic (if relevant)
-  // Check if sections exists on product type or cast to any if extended
-
-  const handleAddToCart = () => {
-    if (!isAuthenticated) {
-      dispatch(openLoginModal({ pendingAction: 'CART', pendingActionData: getCartItem() }));
-      return;
-    }
-    dispatch(addToCart(getCartItem()));
-    dispatch(openCart());
-  };
-
-  const handleBuyNow = () => {
-    if (!isAuthenticated) {
-      dispatch(openLoginModal({ pendingAction: 'CHECKOUT', pendingActionData: getCartItem() }));
-      return;
-    }
-    dispatch(addToCart(getCartItem()));
-    navigate('/checkout');
-  };
+  if (!product) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Product not found</h2>
+          <button
+            onClick={() => navigate('/')}
+            className="text-primary-600 hover:underline"
+          >
+            Return to home
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="bg-gray-100 min-h-screen pb-24 md:pb-0 relative">
-      <SEO
-        title={product.title}
-        description={product.description || `Buy ${product.title} online at best price.`}
-        image={product.images?.[0]}
-        url={window.location.href}
-      />
-      <DesktopStickyHeader
-        title={product.title}
-        image={product.images[0]}
-        price={currentPrice}
-        originalPrice={currentOriginalPrice}
-        onAddToCart={handleAddToCart}
-        onBuyNow={handleBuyNow}
-        isAuthenticated={isAuthenticated}
-      />
+    <div className="min-h-screen bg-gray-50 pb-24 lg:pb-12">
+      <div className="max-w-7xl mx-auto lg:px-4 lg:py-8">
+        <div className="lg:grid lg:grid-cols-12 lg:gap-12 lg:items-start">
 
-      {/* Breadcrumb - Optional but good for SEO */}
-      {/* On Flipkart, this is usually inside the white area, but keeping it top is fine */}
-      <div className="bg-white px-4 py-2 text-xs text-gray-500 border-b md:border-none md:bg-gray-100 md:container md:mx-auto md:px-0 md:py-3">
-        <Link to="/" className="hover:text-primary-600">Home</Link>
-        <span className="mx-1">/</span>
-        {product.category && (
-          <>
-            <Link to={`/category/${product.category}`} className="hover:text-primary-600 capitalize">{product.category.replace('-', ' ')}</Link>
-            <span className="mx-1">/</span>
-          </>
-        )}
-        <span className="text-gray-900">{product.title}</span>
-      </div>
-
-      <div className="md:container md:mx-auto md:bg-white md:shadow-sm md:rounded-sm overflow-hidden md:mt-2">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-0">
-
-          {/* LEFT COLUMN: Gallery & Buttons (Desktop) */}
-          <div className="md:col-span-5 lg:col-span-4 bg-white p-4 sticky top-0 md:border-r border-gray-100">
-            <div className="relative">
-              <ProductImageGallery images={product.images} />
-            </div>
-
-            {/* DESKTOP BUTTONS */}
-            <div className="hidden md:flex gap-3 mt-4">
-              <button
-                onClick={handleAddToCart}
-                disabled={product.stock <= 0}
-                className={`flex-1 py-4 font-bold text-base uppercase shadow-sm rounded-sm flex items-center justify-center gap-2 transition-transform active:scale-[0.98] ${product.stock <= 0 ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#ff9f00] hover:bg-[#ff9000] text-white'}`}
-              >
-                <FiShoppingBag className="w-5 h-5" />
-                {product.stock <= 0 ? 'Out of Stock' : (isAuthenticated ? 'Add to Cart' : 'Login to Add')}
-              </button>
-              <button
-                onClick={handleBuyNow}
-                disabled={product.stock <= 0}
-                className={`flex-1 py-4 font-bold text-base uppercase shadow-sm rounded-sm flex items-center justify-center gap-2 transition-transform active:scale-[0.98] ${product.stock <= 0 ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#fb641b] hover:bg-[#fb541b] text-white'}`}
-              >
-                <FiZap className="w-5 h-5" />
-                {product.stock <= 0 ? 'Out of Stock' : (isAuthenticated ? 'Buy Now' : 'Login to Buy')}
-              </button>
-            </div>
+          {/* Left Column: Image Gallery (Sticky on Desktop) */}
+          <div className="lg:col-span-5 xl:col-span-5 bg-white lg:rounded-2xl lg:shadow-sm lg:overflow-hidden lg:sticky lg:top-24 lg:max-w-md mx-auto w-full">
+            <ImageGallery images={product.images} productName={product.name} />
           </div>
 
-          {/* RIGHT COLUMN: Details */}
-          <div className="md:col-span-7 lg:col-span-8 p-0 md:p-6 bg-white md:bg-transparent">
+          {/* Right Column: Product Info & Controls */}
+          <div className="lg:col-span-7 xl:col-span-7 mt-0">
+            <div className="bg-white lg:rounded-2xl lg:shadow-sm lg:p-8 flex flex-col gap-8">
 
-            {/* Scrollable content container */}
-            <div className="space-y-4 md:space-y-6">
+              {/* Desktop Header: Title & Pricing */}
+              <div>
+                <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 leading-tight">
+                  {product.name}
+                </h1>
 
-              {/* Product Info (Title, Price, Rating) */}
-              <div className="bg-white p-4 md:p-0 md:bg-transparent">
-                <ProductInfo
-                  title={product.title}
-                  badges={product.tags && product.tags.length > 0 ? [product.tags[0]] : []}
-                  price={currentPrice}
-                  originalPrice={currentOriginalPrice}
-                  discount={product.originalPrice ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100) : 0}
-                  rating={product.rating}
-                  reviewCount={product.totalReviews}
-                  stock={product.stock || 0} // Pass stock
-                />
-
-
-                <DeliveryChecker />
-              </div>
-
-              {/* Trust Strip - Global for all products */}
-              <div className="bg-white px-2 py-4 md:bg-transparent">
-                <TrustStrip />
-              </div>
-
-              {/* Dynamic Sections from Data */}
-              {(product as any).sections.map((section: any) => (
-                <div key={section.id} className="bg-white md:bg-transparent -mt-2 md:mt-0">
-                  <SectionRenderer
-                    section={section}
-                    state={{
-                      selectedPackId,
-                      candleCount: 1, // Default or manage state
-                      selectedFragrances: [], // Default or manage state
-                      category: product.category,
-                      currentProductId: product.id
-                    }}
-                    actions={{
-                      onSelectPack: setSelectedPackId,
-                      onFragranceChange: () => { } // Implement if needed
-                    }}
+                <div className="mt-4 flex items-center justify-between">
+                  <PricingBlock
+                    price={calculateFinalPrice()}
+                    originalPrice={product.originalPrice}
+                  />
+                  <RatingsSummary
+                    rating={product.rating}
+                    totalReviews={product.totalReviews}
                   />
                 </div>
-              ))}
+              </div>
 
-              {/* Reviews Section */}
-              <div className="bg-white md:bg-transparent -mt-2 md:mt-0">
-                <ReviewsSection productId={product.id} />
+              {/* Desktop CTA (Hidden on Mobile, shown on Desktop) */}
+              <div className="hidden lg:flex flex-col gap-3">
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleAddToCart}
+                    disabled={product.stock === 0}
+                    className="flex-1 py-4 bg-gray-100 text-gray-900 font-bold rounded-xl hover:bg-gray-200 transition-colors disabled:opacity-50"
+                  >
+                    Add to Cart
+                  </button>
+                  <button
+                    onClick={handleBuyNow}
+                    disabled={product.stock === 0}
+                    className="flex-[1.5] py-4 bg-primary-600 text-white font-bold rounded-xl hover:bg-primary-700 transition-colors shadow-lg shadow-primary-100 disabled:opacity-50"
+                  >
+                    Buy Now
+                  </button>
+                </div>
+                {product.stock === 0 && (
+                  <p className="text-red-500 text-sm font-medium text-center">Out of Stock</p>
+                )}
+              </div>
+
+              <div className="border-t border-gray-100 lg:hidden" />
+
+              {/* Selection Sections */}
+              <div className="space-y-6">
+                {/* Size Selection */}
+                {product.sizes && product.sizes.length > 0 && (
+                  <SizeSelector
+                    sizes={product.sizes}
+                    selectedSize={selectedSize}
+                    onSelectSize={setSelectedSize}
+                  />
+                )}
+
+                {/* Pack Selection */}
+                {product.packs && product.packs.length > 0 && (
+                  <PackSelector
+                    packs={product.packs}
+                    fragrances={product.fragrances || []}
+                    selectedPack={selectedPack}
+                    selectedFragrance={selectedFragrance}
+                    onSelectPack={setSelectedPack}
+                    onSelectFragrance={setSelectedFragrance}
+                    productImage={product.images[0]}
+                    basePrice={selectedSize?.price || product.price}
+                  />
+                )}
+
+                {/* Lid Option */}
+                {product.lidOption?.enabled && (
+                  <label className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors">
+                    <input
+                      type="checkbox"
+                      checked={includeLid}
+                      onChange={(e) => setIncludeLid(e.target.checked)}
+                      className="w-5 h-5 text-primary-600 rounded border-gray-300"
+                    />
+                    <div className="flex-1">
+                      <span className="font-medium text-gray-900">Add Lid</span>
+                      <span className="text-sm text-gray-600 ml-2">
+                        +₹{product.lidOption.price}
+                      </span>
+                    </div>
+                  </label>
+                )}
+              </div>
+
+              {/* Enhanced Price Breakdown */}
+              <EnhancedPriceBreakdown
+                basePrice={product.price}
+                selectedSize={selectedSize}
+                includeLid={includeLid}
+                lidPrice={product.lidOption?.price}
+                selectedPack={product.packs?.[selectedPack]}
+                finalPrice={calculateFinalPrice()}
+              />
+
+              {/* Short Description (Visible on Desktop Right Sidebar) */}
+              <div className="hidden lg:block border-t border-gray-100 pt-6">
+                <ProductDescription
+                  shortDescription={product.shortDescription || product.description.substring(0, 200)}
+                  fullDescription={product.description}
+                  showFull={showFullDescription}
+                  onToggle={() => setShowFullDescription(!showFullDescription)}
+                />
               </div>
             </div>
           </div>
+        </div>
 
+        {/* Bottom Full-Width Sections (Reviews, FAQ, Related) */}
+        <div className="mt-8 lg:mt-12 space-y-12">
+
+          {/* Mobile-only short description */}
+          <div className="lg:hidden px-4">
+            <ProductDescription
+              shortDescription={product.shortDescription || product.description.substring(0, 200)}
+              fullDescription={product.description}
+              showFull={showFullDescription}
+              onToggle={() => setShowFullDescription(!showFullDescription)}
+            />
+          </div>
+
+          <div className="bg-white lg:rounded-2xl lg:shadow-sm lg:p-8 px-4 py-8">
+            <ReviewsSection productId={product._id} />
+          </div>
+
+          {product.faqs && product.faqs.length > 0 && (
+            <div className="bg-white lg:rounded-2xl lg:shadow-sm lg:p-8 px-4 py-8">
+              <FAQSection faqs={product.faqs} />
+            </div>
+          )}
+
+          <div className="pb-8">
+            <RelatedProducts productId={product._id} categoryId={product.category._id} />
+          </div>
         </div>
       </div>
 
-      {/* Related Products Section */}
-      <div className="md:container md:mx-auto mt-8 md:mt-12 mb-12">
-        <RelatedProducts category={product.category} currentProductId={product.id} />
-      </div>
-
-      {/* MOBILE STICKY BUTTONS (Hidden on Desktop, Hidden if Cart Drawer is Open) */}
-      {!isCartOpen && (
-        <StickyCTABar
-          price={currentPrice}
-          originalPrice={currentOriginalPrice}
+      {/* Mobile Sticky Bottom Bar (Hidden on Desktop) */}
+      <div className="lg:hidden">
+        <StickyBottomBar
+          finalPrice={calculateFinalPrice()}
           onAddToCart={handleAddToCart}
           onBuyNow={handleBuyNow}
-          className="md:hidden"
-          isAuthenticated={isAuthenticated}
+          disabled={product.stock === 0}
         />
-      )}
-
+      </div>
     </div>
   );
 };
+
 export default ProductDetailPage;

@@ -102,7 +102,8 @@ export const CartDrawer = () => {
                                                     ) : (
                                                         <ul role="list" className="-my-6 divide-y divide-gray-200">
                                                             {items.map((item) => (
-                                                                <li key={item.productId} className="flex py-6">
+
+                                                                <li key={item.id} className="flex py-6">
                                                                     <div className="h-24 w-24 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
                                                                         <img
                                                                             src={item.image}
@@ -119,19 +120,28 @@ export const CartDrawer = () => {
                                                                                 </h3>
                                                                                 <p className="ml-4">₹{item.price}</p>
                                                                             </div>
+                                                                            {item.selectedAttributes && (
+                                                                                <div className="text-sm text-gray-500 mt-1 space-y-0.5">
+                                                                                    {Object.entries(item.selectedAttributes).map(([key, value]) => (
+                                                                                        <div key={key}>
+                                                                                            <span className="font-medium">{key}:</span> {value}
+                                                                                        </div>
+                                                                                    ))}
+                                                                                </div>
+                                                                            )}
                                                                             <p className="mt-1 text-sm text-gray-500">{item.originalPrice ? `₹${item.originalPrice}` : ''}</p>
                                                                         </div>
                                                                         <div className="flex flex-1 items-end justify-between text-sm">
                                                                             <div className="flex items-center border rounded-sm">
                                                                                 <button
-                                                                                    onClick={() => dispatch(updateQuantity({ productId: item.productId, quantity: Math.max(1, item.quantity - 1) }))}
+                                                                                    onClick={() => dispatch(updateQuantity({ id: item.id, quantity: Math.max(1, item.quantity - 1) }))}
                                                                                     className="px-2 py-1 hover:bg-gray-100"
                                                                                 >
                                                                                     <FiMinus className="w-3 h-3" />
                                                                                 </button>
                                                                                 <span className="px-2 text-gray-900">{item.quantity}</span>
                                                                                 <button
-                                                                                    onClick={() => dispatch(updateQuantity({ productId: item.productId, quantity: item.quantity + 1 }))}
+                                                                                    onClick={() => dispatch(updateQuantity({ id: item.id, quantity: item.quantity + 1 }))}
                                                                                     className="px-2 py-1 hover:bg-gray-100"
                                                                                 >
                                                                                     <FiPlus className="w-3 h-3" />
@@ -141,7 +151,7 @@ export const CartDrawer = () => {
                                                                             <div className="flex">
                                                                                 <button
                                                                                     type="button"
-                                                                                    onClick={() => dispatch(removeFromCart(item.productId))}
+                                                                                    onClick={() => dispatch(removeFromCart(item.id))}
                                                                                     className="font-medium text-red-600 hover:text-red-500"
                                                                                 >
                                                                                     Remove

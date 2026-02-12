@@ -10,7 +10,6 @@ import { BestSellingSection } from '../components/BestSellingSection';
 import { TrustStrip } from '../components/TrustStrip';
 import { WhyChooseUs } from '../components/WhyChooseUs';
 import { BulkCTASection } from '../components/BulkCTASection';
-import { SEO } from '../components/SEO';
 
 export const HomePage = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -111,9 +110,9 @@ export const HomePage = () => {
       </div>
     );
   }
+
   return (
     <div className="min-h-screen bg-gray-50 pb-10">
-      <SEO />
       <div className="container mx-auto px-4 pt-4">
       </div>
 

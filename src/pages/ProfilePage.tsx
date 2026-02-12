@@ -5,10 +5,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'react-hot-toast';
 import { RootState } from '../store';
-import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
-import { FiUser, FiPhone, FiLock, FiSave, FiPackage, FiHeart, FiLogOut } from 'react-icons/fi';
-import { logout } from '../store/slices/authSlice';
+import { FiUser, FiPhone, FiLock, FiSave } from 'react-icons/fi';
 import { getErrorMessage } from '../utils/errorHandler';
 
 const profileSchema = z.object({
@@ -31,7 +29,6 @@ type ProfileFormValues = z.infer<typeof profileSchema>;
 export const ProfilePage = () => {
     const { user } = useSelector((state: RootState) => state.auth);
     const dispatch = useDispatch();
-    const navigate = useNavigate();
     const [isServing, setIsServing] = useState(false);
 
     const {
@@ -76,30 +73,6 @@ export const ProfilePage = () => {
         <div className="min-h-screen bg-gray-50 py-12">
             <div className="container mx-auto px-4 max-w-xl">
                 <h1 className="text-3xl font-bold text-gray-900 mb-8 text-center">My Profile</h1>
-
-                {/* Quick Links */}
-                <div className="grid grid-cols-2 gap-4 mb-8">
-                    <Link to="/orders" className="flex flex-col items-center justify-center p-4 bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-                        <FiPackage className="w-6 h-6 text-primary-600 mb-2" />
-                        <span className="text-sm font-medium text-gray-900">My Orders</span>
-                    </Link>
-                    <Link to="/wishlist" className="flex flex-col items-center justify-center p-4 bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-                        <FiHeart className="w-6 h-6 text-primary-600 mb-2" />
-                        <span className="text-sm font-medium text-gray-900">Wishlist</span>
-                    </Link>
-                </div>
-
-                {/* Quick Links */}
-                <div className="grid grid-cols-2 gap-4 mb-8">
-                    <Link to="/orders" className="flex flex-col items-center justify-center p-4 bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-                        <FiPackage className="w-6 h-6 text-primary-600 mb-2" />
-                        <span className="text-sm font-medium text-gray-900">My Orders</span>
-                    </Link>
-                    <Link to="/wishlist" className="flex flex-col items-center justify-center p-4 bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-                        <FiHeart className="w-6 h-6 text-primary-600 mb-2" />
-                        <span className="text-sm font-medium text-gray-900">Wishlist</span>
-                    </Link>
-                </div>
 
                 <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">

@@ -1,12 +1,21 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
+
 export interface CartItem {
+  id: string; // Unique ID (productId + attributes hash)
   productId: string;
   name: string;
   image: string;
   price: number;
   originalPrice?: number;
   quantity: number;
+  selectedAttributes?: { [key: string]: string }; // Attribute Name -> Option Label
+  breakdown?: {
+    basePrice: number;
+    attributes: { key: string; value: string }[];
+    addOns: string[];
+    multiplier: number;
+  };
 }
 
 interface CartState {
@@ -25,6 +34,31 @@ const calculateTotal = (items: CartItem[]): number => {
   return items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 };
 
+// Helper to generate unique ID
+const generateCartItemId = (item: Omit<CartItem, 'id'>): string => {
+  const parts = [item.productId];
+
+  // Attributes
+  if (item.selectedAttributes) {
+    const sortedAttrs = Object.entries(item.selectedAttributes)
+      .sort(([keyA], [keyB]) => keyA.localeCompare(keyB))
+      .map(([key, value]) => `${key}:${value}`)
+      .join('|');
+    if (sortedAttrs) parts.push(`ATTR[${sortedAttrs}]`);
+  }
+
+  // Breakdown (Addons + Multiplier)
+  if (item.breakdown) {
+    if (item.breakdown.multiplier > 1) parts.push(`PACK[${item.breakdown.multiplier}]`);
+    if (item.breakdown.addOns.length > 0) {
+      const sortedAddons = [...item.breakdown.addOns].sort().join(',');
+      parts.push(`ADDON[${sortedAddons}]`);
+    }
+  }
+
+  return parts.join('-');
+};
+
 const cartSlice = createSlice({
   name: 'cart',
   initialState: {
@@ -32,29 +66,30 @@ const cartSlice = createSlice({
     total: calculateTotal(initialState.items),
   },
   reducers: {
-    addToCart: (state, action: PayloadAction<CartItem>) => {
-      const existingItem = state.items.find(
-        (item) => item.productId === action.payload.productId
-      );
+    addToCart: (state, action: PayloadAction<Omit<CartItem, 'id'> & { id?: string }>) => {
+      const uniqueId = generateCartItemId(action.payload);
+
+      const existingItem = state.items.find((item) => item.id === uniqueId);
+
+      const payloadWithId = { ...action.payload, id: uniqueId };
 
       if (existingItem) {
         existingItem.quantity += action.payload.quantity;
       } else {
-        state.items.push(action.payload);
+        state.items.push(payloadWithId);
       }
 
       state.total = calculateTotal(state.items);
       localStorage.setItem('cart', JSON.stringify(state.items));
-      // Open cart when adding item
       state.isCartOpen = true;
     },
     removeFromCart: (state, action: PayloadAction<string>) => {
-      state.items = state.items.filter((item) => item.productId !== action.payload);
+      state.items = state.items.filter((item) => item.id !== action.payload);
       state.total = calculateTotal(state.items);
       localStorage.setItem('cart', JSON.stringify(state.items));
     },
-    updateQuantity: (state, action: PayloadAction<{ productId: string; quantity: number }>) => {
-      const item = state.items.find((item) => item.productId === action.payload.productId);
+    updateQuantity: (state, action: PayloadAction<{ id: string; quantity: number }>) => {
+      const item = state.items.find((item) => item.id === action.payload.id);
       if (item) {
         item.quantity = action.payload.quantity;
         state.total = calculateTotal(state.items);

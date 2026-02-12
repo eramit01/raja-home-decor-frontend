@@ -1,47 +1,113 @@
-import { useEffect, useState } from 'react';
-import { ProductService } from '../../services/product.service';
-import { ProductCard } from '../ProductCard';
-import { Product } from '../../types';
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { FiStar } from 'react-icons/fi';
 
-interface RelatedProductsProps {
-    category: string;
-    currentProductId: string;
+interface Product {
+    _id: string;
+    name: string;
+    images: string[];
+    price: number;
+    originalPrice?: number;
+    rating: number;
 }
 
-export const RelatedProducts = ({ category, currentProductId }: RelatedProductsProps) => {
+interface RelatedProductsProps {
+    productId: string;
+    categoryId: string;
+}
+
+export const RelatedProducts = ({ productId, categoryId }: RelatedProductsProps) => {
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const fetchRelated = async () => {
+        const fetchRelatedProducts = async () => {
             try {
-                const all = await ProductService.getAllProducts({ category, limit: 5 });
-                // Simple shuffle or filter
-                const filtered = all
-                    .filter((p: Product) => p.id !== currentProductId)
-                    .slice(0, 4);
-                setProducts(filtered);
+                setLoading(true);
+                const response = await fetch(
+                    `http://localhost:5000/api/v1/products/${productId}/related?limit=10`
+                );
+                const data = await response.json();
+
+                if (data.success) {
+                    setProducts(data.data.products);
+                }
             } catch (error) {
-                console.error("Failed to load related products", error);
+                console.error('Failed to fetch related products:', error);
             } finally {
                 setLoading(false);
             }
         };
 
-        if (category) {
-            fetchRelated();
-        }
-    }, [category, currentProductId]);
+        fetchRelatedProducts();
+    }, [productId]);
 
-    if (loading || products.length === 0) return null;
+    if (loading) {
+        return (
+            <div className="px-4">
+                <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
+                </div>
+            </div>
+        );
+    }
+
+    if (products.length === 0) {
+        return null;
+    }
 
     return (
-        <div className="py-8 bg-gray-50 md:bg-white">
-            <h2 className="text-xl font-bold mb-6 px-4 md:px-0">You May Also Like</h2>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 px-4 md:px-0">
-                {products.map(product => (
-                    <ProductCard key={product.id} product={product} />
-                ))}
+        <div className="space-y-4">
+            <h3 className="text-lg font-bold text-gray-900 px-4">You May Also Like</h3>
+
+            <div className="overflow-x-auto scrollbar-hide">
+                <div className="flex gap-3 px-4 pb-2">
+                    {products.map((product) => (
+                        <Link
+                            key={product._id}
+                            to={`/product/${product._id}`}
+                            className="flex-shrink-0 w-40 bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow"
+                        >
+                            {/* Product Image */}
+                            <div className="w-full aspect-square bg-gray-100">
+                                <img
+                                    src={product.images[0]}
+                                    alt={product.name}
+                                    className="w-full h-full object-cover"
+                                />
+                            </div>
+
+                            {/* Product Info */}
+                            <div className="p-3">
+                                <h4 className="text-sm font-medium text-gray-900 line-clamp-2 mb-2">
+                                    {product.name}
+                                </h4>
+
+                                {/* Price */}
+                                <div className="flex items-baseline gap-1 mb-1">
+                                    <span className="text-base font-bold text-gray-900">
+                                        ₹{product.price.toLocaleString('en-IN')}
+                                    </span>
+                                    {product.originalPrice && product.originalPrice > product.price && (
+                                        <span className="text-xs text-gray-500 line-through">
+                                            ₹{product.originalPrice.toLocaleString('en-IN')}
+                                        </span>
+                                    )}
+                                </div>
+
+                                {/* Rating */}
+                                {product.rating > 0 && (
+                                    <div className="flex items-center gap-1 text-xs">
+                                        <div className="flex items-center gap-0.5 px-1.5 py-0.5 bg-green-600 text-white rounded">
+                                            <span>{product.rating.toFixed(1)}</span>
+                                            <FiStar size={10} fill="white" />
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </Link>
+                    ))}
+                </div>
             </div>
         </div>
     );

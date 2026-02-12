@@ -25,8 +25,7 @@ export const QuickLogin = ({ onSuccess }: QuickLoginProps) => {
 
         // Mock Login
         dispatch(setCredentials({
-            user: { name, phone, email: `${phone}@example.com`, id: 'guest-' + Date.now(), role: 'customer' },
-            csrfToken: 'mock-token-' + Date.now()
+            user: { name, phone, email: `${phone}@example.com`, id: 'guest-' + Date.now(), role: 'customer' }
         }));
 
         if (onSuccess) {

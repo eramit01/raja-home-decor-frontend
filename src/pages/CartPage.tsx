@@ -52,64 +52,89 @@ export const CartPage = () => {
 
       <div className="bg-white rounded-lg shadow-sm p-4 mb-4">
         {items.map((item) => (
-          <div key={item.productId} className="flex gap-4 mb-4 pb-4 border-b last:border-0">
-            <img
-              src={item.image}
-              alt={item.name}
-              className="w-20 h-20 object-cover rounded-lg"
-            />
-            <div className="flex-1">
-              <h3 className="font-medium mb-1">{item.name}</h3>
-              <div className="flex items-center gap-2 mb-2">
-                {item.originalPrice && (
-                  <span className="text-sm text-gray-500 line-through">
-                    ₹{item.originalPrice}
-                  </span>
-                )}
-                <span className="font-bold text-primary-600">₹{item.price}</span>
+          <div key={item.id} className="flex gap-4 mb-4 pb-4 border-b last:border-0">
+            <div className="w-24 h-24 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
+              <img
+                src={item.image}
+                alt={item.name}
+                className="w-full h-full object-cover"
+              />
+            </div>
+
+            <div className="flex-1 min-w-0">
+              <div className="flex justify-between items-start mb-1">
+                <h3 className="font-bold text-gray-900 line-clamp-2">{item.name}</h3>
+                <div className="text-right ml-2 shrink-0">
+                  <span className="block font-bold text-gray-900">₹{item.price.toLocaleString()}</span>
+                  {item.originalPrice && item.originalPrice > item.price && (
+                    <span className="text-xs text-gray-500 line-through">₹{item.originalPrice.toLocaleString()}</span>
+                  )}
+                </div>
               </div>
-              <div className="flex items-center gap-2">
+
+              {/* Specs & Breakdown */}
+              <div className="space-y-1 mb-3">
+                {/* Priority Display from Breakdown */}
+                {item.breakdown ? (
+                  <>
+                    {/* 1. Pack Badge */}
+                    {item.breakdown.multiplier > 1 && (
+                      <span className="inline-block bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded font-bold mr-2">
+                        Pack of {item.breakdown.multiplier}
+                      </span>
+                    )}
+
+                    {/* 2. Attributes */}
+                    {item.breakdown.attributes.map((attr) => (
+                      <div key={attr.key} className="text-sm text-gray-600 flex gap-1">
+                        <span className="font-medium text-gray-800">{attr.key}:</span> {attr.value}
+                      </div>
+                    ))}
+
+                    {/* 3. Add-Ons */}
+                    {item.breakdown.addOns.length > 0 && (
+                      <div className="text-sm text-purple-700 flex gap-1 flex-wrap mt-1">
+                        <span className="font-medium">Extras:</span>
+                        {item.breakdown.addOns.map((addon, i) => (
+                          <span key={i} className="bg-purple-50 px-1.5 rounded">{addon}</span>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  // Fallback to legacy selectedAttributes
+                  item.selectedAttributes && Object.entries(item.selectedAttributes).map(([key, value]) => (
+                    <div key={key} className="text-sm text-gray-600 flex gap-1">
+                      <span className="font-medium">{key}:</span> {value}
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Quantity & Remove */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3 border rounded-lg px-2 py-1 bg-white">
+                  <button
+                    onClick={() => dispatch(updateQuantity({ id: item.id, quantity: Math.max(1, item.quantity - 1) }))}
+                    className="p-1 hover:bg-gray-100 rounded transition-colors text-gray-600"
+                  >
+                    <FiMinus size={14} />
+                  </button>
+                  <span className="font-medium text-sm w-4 text-center">{item.quantity}</span>
+                  <button
+                    onClick={() => dispatch(updateQuantity({ id: item.id, quantity: item.quantity + 1 }))}
+                    className="p-1 hover:bg-gray-100 rounded transition-colors text-gray-600"
+                  >
+                    <FiPlus size={14} />
+                  </button>
+                </div>
+
                 <button
-                  type="button"
-                  aria-label="Decrease quantity"
-                  title="Decrease quantity"
-                  onClick={() =>
-                    dispatch(
-                      updateQuantity({
-                        productId: item.productId,
-                        quantity: Math.max(1, item.quantity - 1),
-                      })
-                    )
-                  }
-                  className="p-1 border rounded"
+                  onClick={() => dispatch(removeFromCart(item.id))}
+                  className="text-gray-400 hover:text-red-500 transition-colors p-2"
+                  title="Remove item"
                 >
-                  <FiMinus />
-                </button>
-                <span className="w-8 text-center">{item.quantity}</span>
-                <button
-                  type="button"
-                  aria-label="Increase quantity"
-                  title="Increase quantity"
-                  onClick={() =>
-                    dispatch(
-                      updateQuantity({
-                        productId: item.productId,
-                        quantity: item.quantity + 1,
-                      })
-                    )
-                  }
-                  className="p-1 border rounded"
-                >
-                  <FiPlus />
-                </button>
-                <button
-                  type="button"
-                  aria-label="Remove item from cart"
-                  title="Remove item from cart"
-                  onClick={() => dispatch(removeFromCart(item.productId))}
-                  className="ml-auto text-red-500"
-                >
-                  <FiTrash2 />
+                  <FiTrash2 size={16} />
                 </button>
               </div>
             </div>
