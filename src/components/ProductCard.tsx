@@ -87,7 +87,7 @@ export const ProductCard = ({ product }: ProductCardProps) => {
             <span>{product.rating}</span>
             <FiStar className="text-[10px] fill-current" />
           </div>
-          <span className="text-xs text-gray-400">({product.totalReviews?.toLocaleString()})</span>
+          <span className="text-xs text-gray-400">({(product.totalReviews || 0).toLocaleString()})</span>
         </div>
 
         {/* Price Section */}

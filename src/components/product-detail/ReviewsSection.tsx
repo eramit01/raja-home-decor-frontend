@@ -92,6 +92,9 @@ export const ReviewsSection = ({ productId }: ReviewsSectionProps) => {
                                                 src={img}
                                                 alt="Review attachment"
                                                 className="w-20 h-20 object-cover rounded-lg border border-gray-200 shrink-0"
+                                                onError={(e) => {
+                                                    e.currentTarget.style.display = 'none';
+                                                }}
                                             />
                                         ))}
                                     </div>
