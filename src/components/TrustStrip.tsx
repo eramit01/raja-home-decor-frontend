@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { FiPackage, FiShield, FiRefreshCw, FiCheckCircle, FiLayers, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 
 const trustItems = [
@@ -6,6 +7,7 @@ const trustItems = [
         icon: FiPackage,
         title: 'Direct From Factory',
         subtitle: 'No Middlemen • Manufacturer Pricing',
+        link: '/about'
     },
     {
         icon: FiLayers,
@@ -93,22 +95,33 @@ export const TrustStrip = () => {
                     }}
                     onScroll={checkScrollPosition}
                 >
-                    {trustItems.map((item, index) => (
-                        <div
-                            key={index}
-                            className="flex-shrink-0 w-[75%] md:w-auto snap-start flex items-center gap-3 px-4 py-4 md:px-2 md:py-6 md:flex-col md:text-center md:justify-center transition-colors hover:bg-white"
-                        >
-                            <item.icon className="text-gray-600 text-2xl md:text-3xl flex-shrink-0" strokeWidth={1.5} />
-                            <div className="flex flex-col">
-                                <span className="text-sm md:text-base font-bold text-gray-900 whitespace-nowrap md:whitespace-normal">
-                                    {item.title}
-                                </span>
-                                <span className="text-xs text-gray-500 font-medium whitespace-nowrap md:whitespace-normal mt-0.5">
-                                    {item.subtitle}
-                                </span>
+                    {trustItems.map((item, index) => {
+                        const Content = () => (
+                            <div
+                                className={`flex-shrink-0 w-[75%] md:w-auto snap-start flex items-center gap-3 px-4 py-4 md:px-2 md:py-6 md:flex-col md:text-center md:justify-center transition-colors hover:bg-white ${item.link ? 'cursor-pointer' : ''}`}
+                            >
+                                <item.icon className="text-gray-600 text-2xl md:text-3xl flex-shrink-0" strokeWidth={1.5} />
+                                <div className="flex flex-col">
+                                    <span className="text-sm md:text-base font-bold text-gray-900 whitespace-nowrap md:whitespace-normal">
+                                        {item.title}
+                                    </span>
+                                    <span className="text-xs text-gray-500 font-medium whitespace-nowrap md:whitespace-normal mt-0.5">
+                                        {item.subtitle}
+                                    </span>
+                                </div>
                             </div>
-                        </div>
-                    ))}
+                        );
+
+                        return item.link ? (
+                            <Link key={index} to={item.link} className="contents">
+                                <Content />
+                            </Link>
+                        ) : (
+                            <div key={index} className="contents">
+                                <Content />
+                            </div>
+                        );
+                    })}
                 </div>
             </div>
         </div>

@@ -4,8 +4,8 @@ import { FiChevronDown, FiChevronUp, FiInfo, FiTag } from 'react-icons/fi';
 interface EnhancedPriceBreakdownProps {
     basePrice: number;
     selectedSize?: { name: string; price: number } | null;
-    includeLid: boolean;
-    lidPrice?: number;
+    selectedStyles: string[];
+    productStyles?: { label: string; priceAdjustment: number }[];
     selectedPack?: {
         label: string;
         quantity: number;
@@ -19,8 +19,8 @@ interface EnhancedPriceBreakdownProps {
 export const EnhancedPriceBreakdown = ({
     basePrice,
     selectedSize,
-    includeLid,
-    lidPrice = 0,
+    selectedStyles,
+    productStyles,
     selectedPack,
     finalPrice
 }: EnhancedPriceBreakdownProps) => {
@@ -29,8 +29,17 @@ export const EnhancedPriceBreakdown = ({
     // Calculate components
     const sizePrice = selectedSize ? selectedSize.price : basePrice;
     const sizeAdjustment = sizePrice - basePrice;
-    const lidAmount = includeLid ? lidPrice : 0;
-    const subtotal = sizePrice + lidAmount;
+
+    // Calculate styles total
+    let stylesAmount = 0;
+    if (productStyles && selectedStyles.length > 0) {
+        selectedStyles.forEach(styleLabel => {
+            const style = productStyles.find(s => s.label === styleLabel);
+            if (style) stylesAmount += style.priceAdjustment;
+        });
+    }
+
+    const subtotal = sizePrice + stylesAmount;
     const packQuantity = selectedPack?.quantity || 1;
 
     // Calculate savings for discount packs
@@ -91,16 +100,26 @@ export const EnhancedPriceBreakdown = ({
                         </div>
                     )}
 
-                    {/* Lid Option */}
-                    {includeLid && lidAmount > 0 && (
-                        <div className="flex justify-between text-sm pl-3 border-l-2 border-purple-200">
-                            <span className="text-gray-600">Add Lid</span>
-                            <span className="font-medium text-purple-600">+₹{lidAmount}</span>
+                    {/* Styles Adjustment */}
+                    {selectedStyles.length > 0 && productStyles && (
+                        <div className="flex flex-col gap-1 pl-3 border-l-2 border-purple-200">
+                            {selectedStyles.map(styleLabel => {
+                                const style = productStyles.find(s => s.label === styleLabel);
+                                if (!style || style.priceAdjustment === 0) return null;
+                                return (
+                                    <div key={styleLabel} className="flex justify-between text-sm">
+                                        <span className="text-gray-600">{styleLabel}</span>
+                                        <span className="font-medium text-purple-600">
+                                            {style.priceAdjustment > 0 ? '+' : ''}₹{style.priceAdjustment}
+                                        </span>
+                                    </div>
+                                );
+                            })}
                         </div>
                     )}
 
                     {/* Subtotal */}
-                    {(sizeAdjustment !== 0 || lidAmount > 0) && (
+                    {(sizeAdjustment !== 0 || stylesAmount !== 0) && (
                         <div className="flex justify-between text-sm pt-2 border-t border-dashed border-gray-200">
                             <span className="text-gray-700 font-medium">Subtotal (per item)</span>
                             <span className="font-semibold text-gray-900">₹{subtotal}</span>

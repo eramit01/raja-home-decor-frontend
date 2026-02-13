@@ -14,8 +14,10 @@ export interface CartItem {
     basePrice: number;
     attributes: { key: string; value: string }[];
     addOns: string[];
+    styles?: string[]; // Added for price breakdown rehydration
     multiplier: number;
   };
+  styles?: string[]; // Top level for easy access
 }
 
 interface CartState {
@@ -54,6 +56,12 @@ const generateCartItemId = (item: Omit<CartItem, 'id'>): string => {
       const sortedAddons = [...item.breakdown.addOns].sort().join(',');
       parts.push(`ADDON[${sortedAddons}]`);
     }
+  }
+
+  // Styles
+  if (item.styles && item.styles.length > 0) {
+    const sortedStyles = [...item.styles].sort().join(',');
+    parts.push(`STYLES[${sortedStyles}]`);
   }
 
   return parts.join('-');

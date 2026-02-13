@@ -16,6 +16,9 @@ import { TermsPage } from './pages/TermsPage';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { OrderDetailPage } from './pages/OrderDetailPage';
 import { ProfilePage } from './pages/ProfilePage';
+import { AboutUsPage } from './pages/AboutUsPage';
+import { RefundPolicyPage } from './pages/RefundPolicyPage';
+import { ShippingPolicyPage } from './pages/ShippingPolicyPage';
 
 function App() {
   return (
@@ -29,8 +32,11 @@ function App() {
         <Route path="login" element={<LoginPage />} />
         <Route path="bulk-enquiry" element={<BulkEnquiryPage />} />
         <Route path="faq" element={<FAQPage />} />
+        <Route path="about" element={<AboutUsPage />} />
         <Route path="privacy-policy" element={<PrivacyPolicyPage />} />
         <Route path="terms" element={<TermsPage />} />
+        <Route path="refund-policy" element={<RefundPolicyPage />} />
+        <Route path="shipping-policy" element={<ShippingPolicyPage />} />
         <Route
           path="wishlist"
           element={

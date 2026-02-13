@@ -42,8 +42,12 @@ export const HomePage = () => {
         setProducts(mappedProducts);
 
         // Process Banners
+        console.log('Banners Data Response:', bannersData);
         if (bannersData?.data?.banners) {
+          console.log('Setting Banners:', bannersData.data.banners);
           setBanners(bannersData.data.banners);
+        } else {
+          console.warn('No banners found in response');
         }
 
         // Process Categories

@@ -1,38 +1,44 @@
-import { useState } from 'react';
-import { FiChevronDown } from 'react-icons/fi';
-
 interface Pack {
+    _id?: string;
     label: string;
     quantity: number;
-    pricingType: string;
+    pricingType?: 'auto' | 'discount' | 'fixed';
     fixedPrice?: number;
     discountPercent?: number;
+    price?: number; // Universal model bundle price
 }
 
 interface PackSelectorProps {
     packs: Pack[];
     fragrances: string[];
-    selectedPack: number;
+    selectedPackId: string | null;
     selectedFragrance: string;
-    onSelectPack: (index: number) => void;
+    onSelectPack: (packId: string) => void;
     onSelectFragrance: (fragrance: string) => void;
-    productImage: string;
+    productImage?: string;
     basePrice: number;
+    baseOriginalPrice?: number; // Added to support MRP calculation
 }
 
 export const PackSelector = ({
     packs,
     fragrances,
-    selectedPack,
+    selectedPackId,
     selectedFragrance,
     onSelectPack,
     onSelectFragrance,
     productImage,
-    basePrice
+    basePrice,
+    baseOriginalPrice
 }: PackSelectorProps) => {
-    const [expandedPack, setExpandedPack] = useState<number | null>(null);
 
     const calculatePackPrice = (pack: Pack): number => {
+        // Universal Model: pack has explicit price
+        if (pack.price !== undefined) {
+            return pack.price;
+        }
+
+        // Legacy fallback
         switch (pack.pricingType) {
             case 'fixed':
                 return pack.fixedPrice || basePrice * pack.quantity;
@@ -47,95 +53,85 @@ export const PackSelector = ({
         }
     };
 
-    const calculatePackMRP = (pack: Pack): number => {
-        return basePrice * pack.quantity;
-    };
-
     return (
         <div className="space-y-4">
-            <h3 className="text-base font-semibold text-gray-900">Choose Your Pack</h3>
-
             <div className="space-y-3">
-                {packs.map((pack, index) => {
-                    const packPrice = calculatePackPrice(pack);
-                    const packMRP = calculatePackMRP(pack);
-                    const isSelected = selectedPack === index;
-                    const isExpanded = expandedPack === index;
+                <h3 className="text-base font-bold text-gray-900 uppercase tracking-wider">Select Pack</h3>
 
-                    return (
-                        <div
-                            key={index}
-                            className={`border-2 rounded-xl overflow-hidden transition-all ${isSelected
-                                    ? 'border-primary-600 bg-primary-50'
-                                    : 'border-gray-200 bg-white hover:border-gray-300'
-                                }`}
-                        >
-                            {/* Pack Card */}
+                <div className="flex flex-wrap gap-3">
+                    {packs.map((pack: Pack, index: number) => {
+                        // Use _id if available, fallback to label (legacy)
+                        const packId = pack._id || pack.label;
+                        const packPrice = calculatePackPrice(pack);
+                        const isSelected = selectedPackId === packId;
+
+                        // Calculate Comparison Price (MRP)
+                        // Priority: Unit MRP * Quantity > Unit Selling * Quantity
+                        const unitMrp = baseOriginalPrice && baseOriginalPrice > basePrice ? baseOriginalPrice : basePrice;
+                        const packMrp = unitMrp * pack.quantity;
+
+                        // Calculate Discount
+                        let discountPercent = 0;
+                        if (packMrp > packPrice) {
+                            discountPercent = Math.round(((packMrp - packPrice) / packMrp) * 100);
+                        }
+
+                        // Smart Label: If label is just "Pack of", append quantity
+                        let displayLabel = pack.label;
+                        if (displayLabel.trim().toLowerCase() === 'pack of') {
+                            displayLabel = `Pack of ${pack.quantity}`;
+                        }
+
+                        return (
                             <button
-                                onClick={() => {
-                                    onSelectPack(index);
-                                    setExpandedPack(isExpanded ? null : index);
-                                }}
-                                className="w-full p-4 flex items-center gap-3 text-left"
+                                key={packId}
+                                onClick={() => onSelectPack(packId)}
+                                className={`flex flex-col items-center justify-center px-4 py-2 rounded-xl border-2 transition-all min-w-[110px] text-center relative ${isSelected
+                                    ? 'border-primary-600 bg-primary-50 text-primary-700 font-bold ring-1 ring-primary-600'
+                                    : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                                    }`}
                             >
-                                {/* Product Image */}
-                                <div className="flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden bg-gray-100">
-                                    <img
-                                        src={productImage}
-                                        alt={pack.label}
-                                        className="w-full h-full object-cover"
-                                    />
-                                </div>
-
-                                {/* Pack Info */}
-                                <div className="flex-1 min-w-0">
-                                    <div className="font-semibold text-gray-900">{pack.label}</div>
-                                    <div className="flex items-baseline gap-2 mt-1">
-                                        <span className="text-lg font-bold text-gray-900">
-                                            ₹{Math.round(packPrice).toLocaleString('en-IN')}
-                                        </span>
-                                        {pack.pricingType !== 'auto' && packPrice < packMRP && (
-                                            <span className="text-sm text-gray-500 line-through">
-                                                ₹{Math.round(packMRP).toLocaleString('en-IN')}
-                                            </span>
-                                        )}
+                                {/* Discount Badge */}
+                                {discountPercent > 0 && (
+                                    <div className={`absolute -top-3 left-1/2 -translate-x-1/2 text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap shadow-sm ${isSelected ? 'bg-primary-600 text-white' : 'bg-green-100 text-green-700'}`}>
+                                        {discountPercent}% OFF
                                     </div>
-                                </div>
-
-                                {/* Expand Icon */}
-                                {fragrances.length > 0 && (
-                                    <FiChevronDown
-                                        className={`flex-shrink-0 transition-transform ${isExpanded ? 'rotate-180' : ''
-                                            }`}
-                                        size={20}
-                                    />
                                 )}
-                            </button>
 
-                            {/* Fragrance Dropdown (Expanded) */}
-                            {isExpanded && fragrances.length > 0 && (
-                                <div className="px-4 pb-4 border-t border-gray-200">
-                                    <label className="block text-sm font-medium text-gray-700 mb-2 mt-3">
-                                        Choose Fragrance
-                                    </label>
-                                    <select
-                                        value={selectedFragrance}
-                                        onChange={(e) => onSelectFragrance(e.target.value)}
-                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                                    >
-                                        <option value="">Select a fragrance</option>
-                                        {fragrances.map((fragrance, idx) => (
-                                            <option key={idx} value={fragrance}>
-                                                {fragrance}
-                                            </option>
-                                        ))}
-                                    </select>
+                                <div className="text-sm font-bold whitespace-nowrap mt-1">{displayLabel}</div>
+
+                                <div className="flex flex-col items-center mt-0.5 leading-tight">
+                                    <span className="text-sm font-bold">₹{Math.round(packPrice).toLocaleString('en-IN')}</span>
+                                    {discountPercent > 0 && (
+                                        <span className="text-[10px] text-gray-400 line-through">₹{Math.round(packMrp).toLocaleString('en-IN')}</span>
+                                    )}
                                 </div>
-                            )}
-                        </div>
-                    );
-                })}
+                            </button>
+                        );
+                    })}
+                </div>
             </div>
+
+            {/* Fragrance Selector */}
+            {fragrances.length > 0 && (
+                <div className="space-y-3 pt-2">
+                    <h3 className="text-base font-semibold text-gray-900">Choose Fragrance</h3>
+                    <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2">
+                        {fragrances.map((fragrance: string, index: number) => (
+                            <button
+                                key={index}
+                                onClick={() => onSelectFragrance(fragrance)}
+                                className={`flex-shrink-0 px-4 py-2 rounded-lg border transition-all ${selectedFragrance === fragrance
+                                    ? 'border-primary-600 bg-primary-50 text-primary-700 font-medium'
+                                    : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                                    }`}
+                            >
+                                {fragrance}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

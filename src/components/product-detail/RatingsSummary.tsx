@@ -6,13 +6,7 @@ interface RatingsSummaryProps {
 }
 
 export const RatingsSummary = ({ rating, totalReviews }: RatingsSummaryProps) => {
-    if (totalReviews === 0) {
-        return (
-            <div className="text-sm text-gray-600">
-                Be the first to review
-            </div>
-        );
-    }
+
 
     return (
         <div className="flex items-center gap-2">

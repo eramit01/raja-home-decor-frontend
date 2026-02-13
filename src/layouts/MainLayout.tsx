@@ -67,8 +67,8 @@ export const MainLayout = () => {
       {/* Mobile bottom navigation */}
       {showBottomNav && <BottomNav />}
 
-      {/* Floating WhatsApp Button */}
-      <WhatsAppButton />
+      {/* Floating WhatsApp Button - Removed */}
+      {/* <WhatsAppButton /> */}
 
       {/* Global Cart Drawer */}
       <CartDrawer />

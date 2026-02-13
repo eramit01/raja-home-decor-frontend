@@ -7,6 +7,8 @@ interface Review {
     user: { name: string };
     rating: number;
     comment: string;
+    images?: string[];
+    video?: string;
     createdAt: string;
 }
 
@@ -80,6 +82,31 @@ export const ReviewsSection = ({ productId }: ReviewsSectionProps) => {
                                     </div>
                                 </div>
                                 <p className="text-sm text-gray-700 leading-relaxed">{review.comment}</p>
+
+                                {/* Review Images */}
+                                {review.images && review.images.length > 0 && (
+                                    <div className="flex gap-2 mt-3 overflow-x-auto pb-2">
+                                        {review.images.map((img, idx) => (
+                                            <img
+                                                key={idx}
+                                                src={img}
+                                                alt="Review attachment"
+                                                className="w-20 h-20 object-cover rounded-lg border border-gray-200 shrink-0"
+                                            />
+                                        ))}
+                                    </div>
+                                )}
+
+                                {/* Review Video */}
+                                {review.video && (
+                                    <div className="mt-3 max-w-xs">
+                                        <video controls className="w-full rounded-lg bg-black">
+                                            <source src={review.video} />
+                                            Your browser does not support the video tag.
+                                        </video>
+                                    </div>
+                                )}
+
                                 <p className="text-xs text-gray-500 mt-2">
                                     {new Date(review.createdAt).toLocaleDateString('en-IN', {
                                         year: 'numeric',

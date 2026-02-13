@@ -61,6 +61,37 @@ export const BulkEnquiryPage = () => {
                 </div>
             </div>
 
+            {/* About Us / Trust Section */}
+            <div className="bg-white py-16 border-b border-gray-100">
+                <div className="container mx-auto px-4 text-center max-w-4xl">
+                    <span className="text-primary-600 font-bold tracking-wider uppercase text-sm mb-2 block">Why Choose Us?</span>
+                    <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">India's Leading Factory-Direct Glassware Manufacturer</h2>
+                    <p className="text-gray-600 text-lg leading-relaxed mb-8">
+                        We are a premier manufacturer and supplier of high-quality glassware, candle jars, and home decor items.
+                        With our own state-of-the-art manufacturing facility, we cut out the middlemen to bring you
+                        <strong> unbeatable factory prices</strong> without compromising on quality.
+                    </p>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-left mt-12">
+                        <div className="p-4 bg-gray-50 rounded-lg">
+                            <div className="text-3xl font-bold text-gray-900 mb-1">10+</div>
+                            <div className="text-sm text-gray-600">Years of Experience</div>
+                        </div>
+                        <div className="p-4 bg-gray-50 rounded-lg">
+                            <div className="text-3xl font-bold text-gray-900 mb-1">500+</div>
+                            <div className="text-sm text-gray-600">Product Designs</div>
+                        </div>
+                        <div className="p-4 bg-gray-50 rounded-lg">
+                            <div className="text-3xl font-bold text-gray-900 mb-1">10k+</div>
+                            <div className="text-sm text-gray-600">Happy Clients</div>
+                        </div>
+                        <div className="p-4 bg-gray-50 rounded-lg">
+                            <div className="text-3xl font-bold text-gray-900 mb-1">24h</div>
+                            <div className="text-sm text-gray-600">Dispatch Ready</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {/* Value Propositions */}
             <div className="py-16 bg-gray-50">
                 <div className="container mx-auto px-4">

@@ -8,6 +8,7 @@ import App from './App';
 import { store } from './store';
 import { WishlistProvider } from './context/WishlistContext';
 import { LoginModal } from './components/LoginModal';
+import ScrollToTop from './components/ScrollToTop';
 import './index.css';
 
 const queryClient = new QueryClient({
@@ -25,6 +26,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       <WishlistProvider>
         <QueryClientProvider client={queryClient}>
           <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+            <ScrollToTop />
             <App />
             <Toaster position="top-center" />
             <LoginModal />

@@ -19,14 +19,14 @@ export const CategoryProductSection = ({
         <div className="bg-white py-4 mt-2">
             {/* 1. Full-width Banner */}
             <div className="w-full mb-4">
-                <div className="w-full overflow-hidden aspect-[3240/537]">
+                <Link to={viewAllLink} className="block w-full overflow-hidden aspect-[3240/537]">
                     <img
                         src={bannerImage}
                         alt={`${title} Banner`}
-                        className="w-full h-full object-cover font-display"
+                        className="w-full h-full object-cover font-display hover:scale-105 transition-transform duration-700"
                         loading="lazy"
                     />
-                </div>
+                </Link>
             </div>
 
             <div className="container mx-auto px-4">
