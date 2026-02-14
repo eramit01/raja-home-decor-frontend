@@ -50,10 +50,11 @@ export const LoginPage = () => {
       setLoading(true);
       const response = await authService.identify({ name, phone });
 
-      const { user, csrfToken } = response.data;
+      const { user, accessToken, csrfToken } = response.data;
 
       dispatch(setCredentials({
         user: user,
+        accessToken: accessToken,
         csrfToken: csrfToken
       }));
 

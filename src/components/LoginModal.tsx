@@ -36,6 +36,7 @@ export const LoginModal = () => {
     const handleAuthSuccess = (response: any) => {
         dispatch(setCredentials({
             user: response.data.user,
+            accessToken: response.data.accessToken,
             csrfToken: response.data.csrfToken
         }));
 

@@ -12,13 +12,20 @@ export const api = axios.create({
   withCredentials: true, // Enable sending cookies with requests
 });
 
-// Request interceptor to add CSRF token
+// Request interceptor to add CSRF token and Authorization header
 api.interceptors.request.use(
   (config) => {
+    const state = store.getState();
+
+    // Add Authorization header if available (fallback for cross-domain cookie issues)
+    const accessToken = state.auth.accessToken;
+    if (accessToken) {
+      config.headers.Authorization = `Bearer ${accessToken}`;
+    }
+
     // Add CSRF token for state-changing requests
     const safeMethods = ['GET', 'HEAD', 'OPTIONS'];
     if (!safeMethods.includes(config.method?.toUpperCase() || '')) {
-      const state = store.getState();
       const csrfToken = state.auth.csrfToken;
       if (csrfToken) {
         config.headers['X-CSRF-Token'] = csrfToken;

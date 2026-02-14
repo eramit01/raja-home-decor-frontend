@@ -11,12 +11,14 @@ interface User {
 interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
+  accessToken: string | null;
   csrfToken: string | null;
 }
 
 const initialState: AuthState = {
   user: null,
   isAuthenticated: false,
+  accessToken: null,
   csrfToken: null,
 };
 
@@ -24,9 +26,10 @@ const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    setCredentials: (state, action: PayloadAction<{ user: User; csrfToken?: string }>) => {
+    setCredentials: (state, action: PayloadAction<{ user: User; accessToken: string; csrfToken?: string }>) => {
       state.user = action.payload.user;
       state.isAuthenticated = true;
+      state.accessToken = action.payload.accessToken;
       if (action.payload.csrfToken) {
         state.csrfToken = action.payload.csrfToken;
       }
@@ -37,6 +40,7 @@ const authSlice = createSlice({
     logout: (state) => {
       state.user = null;
       state.isAuthenticated = false;
+      state.accessToken = null;
       state.csrfToken = null;
     },
   },
