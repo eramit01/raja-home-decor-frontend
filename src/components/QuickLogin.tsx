@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { setCredentials } from '../store/slices/authSlice';
+import { authService } from '../services/auth.service';
 
 interface QuickLoginProps {
     onSuccess?: () => void;
@@ -10,9 +11,10 @@ export const QuickLogin = ({ onSuccess }: QuickLoginProps) => {
     const [name, setName] = useState('');
     const [phone, setPhone] = useState('');
     const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
     const dispatch = useDispatch();
 
-    const handleLogin = (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!name || !phone) {
             setError('Please fill in all fields');
@@ -23,13 +25,24 @@ export const QuickLogin = ({ onSuccess }: QuickLoginProps) => {
             return;
         }
 
-        // Mock Login
-        dispatch(setCredentials({
-            user: { name, phone, email: `${phone}@example.com`, id: 'guest-' + Date.now(), role: 'customer' }
-        }));
+        try {
+            setLoading(true);
+            setError('');
+            const response = await authService.identify({ name, phone });
 
-        if (onSuccess) {
-            onSuccess();
+            dispatch(setCredentials({
+                user: response.data.user,
+                accessToken: response.data.accessToken,
+                csrfToken: response.data.csrfToken
+            }));
+
+            if (onSuccess) {
+                onSuccess();
+            }
+        } catch (err: any) {
+            setError(err.response?.data?.message || 'Something went wrong. Please try again.');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -62,9 +75,10 @@ export const QuickLogin = ({ onSuccess }: QuickLoginProps) => {
 
                 <button
                     type="submit"
-                    className="w-full bg-black text-white py-3 font-bold uppercase text-sm tracking-wide rounded"
+                    disabled={loading}
+                    className="w-full bg-black text-white py-3 font-bold uppercase text-sm tracking-wide rounded disabled:opacity-50"
                 >
-                    Proceed to Checkout
+                    {loading ? 'Processing...' : 'Proceed to Checkout'}
                 </button>
             </form>
         </div>
