@@ -29,9 +29,13 @@ export const ReviewsSection = ({ productId }: ReviewsSectionProps) => {
                 const response = await api.get(`/reviews/product/${productId}?page=${page}&limit=5`);
                 const data = response.data;
 
-                if (data.success) {
+                if (data.success && data.data.reviews) {
                     setReviews(data.data.reviews);
-                    setHasMore(data.data.pagination.page < data.data.pagination.pages);
+                    if (data.data.pagination) {
+                        setHasMore(data.data.pagination.page < data.data.pagination.pages);
+                    } else {
+                        setHasMore(false);
+                    }
                 }
             } catch (error) {
                 console.error('Failed to fetch reviews:', error);

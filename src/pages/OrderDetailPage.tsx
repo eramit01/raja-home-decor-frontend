@@ -19,7 +19,7 @@ interface Order {
         phone: string;
     };
     items: {
-        productId: {
+        product: {
             _id: string;
             name: string;
         };
@@ -27,6 +27,10 @@ interface Order {
         image: string;
         quantity: number;
         price: number;
+        variant?: { label: string; price: number; sku?: string };
+        pack?: { label: string; price: number };
+        style?: { label: string; priceAdjustment: number };
+        addOns?: { label: string; price: number }[];
     }[];
 }
 
@@ -126,12 +130,40 @@ export const OrderDetailPage = () => {
                                             <img src={item.image} alt={item.name} className="w-full h-full object-contain" />
                                         </div>
                                         <div className="flex-1">
-                                            <Link to={`/product/${item.productId._id}`} className="font-medium text-gray-900 hover:text-primary-600 line-clamp-2">
+                                            <Link to={`/product/${item.product._id}`} className="font-medium text-gray-900 hover:text-primary-600 line-clamp-2">
                                                 {item.name}
                                             </Link>
-                                            <div className="mt-2 flex justify-between items-center">
-                                                <span className="text-sm text-gray-500">Qty: {item.quantity}</span>
-                                                <span className="font-bold text-gray-900">₹{(item.price * item.quantity).toLocaleString()}</span>
+                                            <div className="mt-1 space-y-1">
+                                                {item.variant && (
+                                                    <p className="text-xs text-gray-600">
+                                                        <span className="font-medium">Option:</span> {item.variant.label}
+                                                    </p>
+                                                )}
+                                                {item.pack && (
+                                                    <p className="text-xs text-green-700 font-bold">
+                                                        {item.pack.label}
+                                                    </p>
+                                                )}
+                                                {item.style && (
+                                                    <p className="text-xs text-gray-600">
+                                                        <span className="font-medium">Style:</span> {item.style.label}
+                                                    </p>
+                                                )}
+                                                {item.addOns && item.addOns.length > 0 && (
+                                                    <div className="flex flex-wrap gap-1 mt-1">
+                                                        <span className="text-[10px] font-bold text-purple-600 uppercase tracking-wider">Extras:</span>
+                                                        {item.addOns.map((addon, i) => (
+                                                            <span key={i} className="text-[10px] bg-purple-50 text-purple-700 px-1.5 rounded">{addon.label}</span>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="mt-3 flex justify-between items-center">
+                                                <span className="text-sm text-gray-500 font-medium">Qty: {item.quantity}</span>
+                                                <div className="text-right">
+                                                    <span className="block font-bold text-gray-900 text-lg">₹{(item.price * item.quantity).toLocaleString()}</span>
+                                                    <span className="text-[10px] text-gray-400">Unit: ₹{item.price.toLocaleString()}</span>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>

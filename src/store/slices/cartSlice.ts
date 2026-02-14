@@ -10,6 +10,12 @@ export interface CartItem {
   originalPrice?: number;
   quantity: number;
   selectedAttributes?: { [key: string]: string }; // Attribute Name -> Option Label
+  variantId?: string;
+  packId?: string;
+  styleId?: string;
+  addOnIds?: string[];
+  size?: string;
+  fragrance?: string;
   breakdown?: {
     basePrice: number;
     attributes: { key: string; value: string }[];

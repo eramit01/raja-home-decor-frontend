@@ -4,7 +4,7 @@ import { OrderService } from '../services/order.service';
 import { FiPackage, FiChevronRight, FiClock, FiCheckCircle, FiTruck, FiXCircle } from 'react-icons/fi';
 
 interface OrderItem {
-  productId: {
+  product: {
     _id: string;
     name: string;
     images: string[];
@@ -14,6 +14,8 @@ interface OrderItem {
   price: number;
   image: string;
   name: string;
+  variant?: { label: string };
+  pack?: { label: string };
 }
 
 interface Order {
@@ -159,6 +161,11 @@ export const OrdersPage = () => {
                             </p>
                             <p className="text-xs text-gray-500 mt-1">
                               Qty: {item.quantity} × ₹{item.price.toLocaleString()}
+                              {(item.variant || item.pack) && (
+                                <span className="block mt-0.5 font-medium text-gray-700">
+                                  {item.variant?.label}{item.variant && item.pack ? ' • ' : ''}{item.pack?.label}
+                                </span>
+                              )}
                             </p>
                           </div>
                         </div>

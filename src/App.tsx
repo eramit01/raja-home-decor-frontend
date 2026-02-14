@@ -19,6 +19,7 @@ import { ProfilePage } from './pages/ProfilePage';
 import { AboutUsPage } from './pages/AboutUsPage';
 import { RefundPolicyPage } from './pages/RefundPolicyPage';
 import { ShippingPolicyPage } from './pages/ShippingPolicyPage';
+import { OrderSuccessPage } from './pages/OrderSuccessPage';
 
 function App() {
   return (
@@ -37,23 +38,9 @@ function App() {
         <Route path="terms" element={<TermsPage />} />
         <Route path="refund-policy" element={<RefundPolicyPage />} />
         <Route path="shipping-policy" element={<ShippingPolicyPage />} />
-        <Route
-          path="wishlist"
-          element={
-            <ProtectedRoute>
-              <WishlistPage />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="checkout"
-          element={
-            <ProtectedRoute>
-              <CheckoutPage />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="wishlist" element={<WishlistPage />} />
+        <Route path="checkout" element={<CheckoutPage />} />
+        <Route path="order-success" element={<OrderSuccessPage />} />
         <Route
           path="orders"
           element={
@@ -62,14 +49,7 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="orders/:id"
-          element={
-            <ProtectedRoute>
-              <OrderDetailPage />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="orders/:id" element={<OrderDetailPage />} />
         <Route
           path="profile"
           element={

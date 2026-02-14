@@ -4,12 +4,27 @@ export interface CreateOrderParams {
     items: {
         productId: string;
         quantity: number;
-        image: string; // Snapshot
+        image: string;
+        variantId?: string;
+        packId?: string;
+        styleId?: string;
+        addOnIds?: string[];
+        selectedAttributes?: { [key: string]: string }; // Attribute Name -> Option Label
+        size?: string;
+        fragrance?: string;
+        breakdown?: {
+            basePrice: number;
+            attributes: { key: string; value: string }[];
+            addOns: string[];
+            styles?: string[];
+            multiplier: number;
+        };
+        styles?: string[]; // Top level labels for easy access
     }[];
     shippingAddress: {
         fullName: string;
         phone: string;
-        email: string; // Snapshot
+        email: string;
         address: string;
         city: string;
         state: string;

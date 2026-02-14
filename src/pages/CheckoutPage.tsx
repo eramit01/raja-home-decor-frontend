@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { RootState } from '../store';
-import { Link } from 'react-router-dom';
+import { clearCart } from '../store/slices/cartSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { Link, useNavigate } from 'react-router-dom';
 import { FiLock, FiCheck } from 'react-icons/fi';
 import { OrderService } from '../services/order.service';
 import { AddressSelector } from '../components/AddressSelector';
@@ -14,7 +15,7 @@ import { toast } from 'react-hot-toast';
 // 1. Validation Schema
 const checkoutSchema = z.object({
   fullName: z.string().min(2, 'Name must be at least 2 characters'),
-  email: z.string().email('Invalid email address'),
+  email: z.string().email('Invalid email address').optional().or(z.literal('')),
   phone: z.string().regex(/^[6-9]\d{9}$/, 'Invalid Indian mobile number'),
   address: z.string().min(10, 'Address must be complete'),
   city: z.string().min(2, 'City is required'),
@@ -37,6 +38,8 @@ const loadRazorpay = () => {
 export const CheckoutPage = () => {
   const { items, total } = useSelector((state: RootState) => state.cart);
   const { user } = useSelector((state: RootState) => state.auth);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [paymentMethod, setPaymentMethod] = useState<'cod' | 'online'>('cod');
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedAddressId, setSelectedAddressId] = useState<string | undefined>(undefined);
@@ -107,12 +110,21 @@ export const CheckoutPage = () => {
         items: items.map(item => ({
           productId: item.productId,
           quantity: item.quantity,
-          image: item.image
+          image: item.image,
+          variantId: item.variantId,
+          packId: item.packId,
+          styleId: item.styleId,
+          addOnIds: item.addOnIds,
+          size: item.size,
+          fragrance: item.fragrance,
+          selectedAttributes: item.selectedAttributes,
+          breakdown: item.breakdown,
+          styles: item.styles
         })),
         shippingAddress: {
           fullName: data.fullName,
           phone: data.phone,
-          email: data.email,
+          email: data.email || '',
           address: data.address,
           city: data.city,
           state: data.state,
@@ -127,7 +139,8 @@ export const CheckoutPage = () => {
       // 3. Handle Payment Flow
       if (paymentMethod === 'cod') {
         toast.success(`Order Placed! ID: ${order.orderNumber}`, { id: toastId });
-        window.location.href = '/orders';
+        dispatch(clearCart());
+        navigate(`/order-success?orderId=${order._id || order.id}`);
       } else if (order.razorpayOrderId) {
         // Open Razorpay
         const options = {
@@ -141,13 +154,14 @@ export const CheckoutPage = () => {
             try {
               toast.loading('Verifying payment...', { id: toastId });
               await OrderService.verifyPayment({
-                orderId: order._id,
+                orderId: order._id || order.id,
                 paymentId: response.razorpay_payment_id,
                 signature: response.razorpay_signature,
                 razorpayOrderId: response.razorpay_order_id
               });
               toast.success('Payment Successful!', { id: toastId });
-              window.location.href = '/orders';
+              dispatch(clearCart());
+              navigate(`/order-success?orderId=${order._id || order.id}`);
             } catch (err) {
               toast.error('Payment Verification Failed', { id: toastId });
               console.error(err);
@@ -155,7 +169,7 @@ export const CheckoutPage = () => {
           },
           prefill: {
             name: data.fullName,
-            email: data.email,
+            email: data.email || '',
             contact: data.phone
           },
           theme: {
@@ -237,17 +251,6 @@ export const CheckoutPage = () => {
 
           {/* LEFT COLUMN: User Details & Payment */}
           <div className="flex-1 space-y-6">
-
-            {/* 0. Saved Addresses (If Logged In) */}
-            {user && (
-              <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                <h2 className="flex items-center gap-2 text-lg font-bold text-gray-900 mb-6">
-                  <span className="flex items-center justify-center w-6 h-6 rounded-full bg-black text-white text-xs">A</span>
-                  Saved Addresses
-                </h2>
-                <AddressSelector selectedId={selectedAddressId} onSelect={handleAddressSelect} />
-              </div>
-            )}
 
             {/* 1. Contact & Shipping Info */}
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">

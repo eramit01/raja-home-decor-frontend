@@ -1,14 +1,8 @@
 import { api } from './api';
 
-export interface SendOTPRequest {
-  email?: string;
-  phone?: string;
-}
-
-export interface VerifyOTPRequest {
-  email?: string;
-  phone?: string;
-  otp: string;
+export interface IdentifyRequest {
+  name: string;
+  phone: string;
 }
 
 export interface AuthResponse {
@@ -26,14 +20,19 @@ export interface AuthResponse {
   };
 }
 
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
 export const authService = {
-  sendOTP: async (data: SendOTPRequest) => {
-    const response = await api.post('/auth/send-otp', data);
+  login: async (data: LoginRequest): Promise<AuthResponse> => {
+    const response = await api.post('/auth/login', data);
     return response.data;
   },
 
-  verifyOTP: async (data: VerifyOTPRequest): Promise<AuthResponse> => {
-    const response = await api.post('/auth/verify-otp', data);
+  identify: async (data: IdentifyRequest): Promise<AuthResponse> => {
+    const response = await api.post('/auth/identify', data);
     return response.data;
   },
 

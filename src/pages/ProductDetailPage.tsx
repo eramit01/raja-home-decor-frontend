@@ -118,15 +118,6 @@ const ProductDetailPage = () => {
         if (data.success) {
           const fetchedProduct = data.data.product;
           setProduct(fetchedProduct);
-
-          // Default Selection Logic: NONE
-          // User requested: Show base price initially, no pre-selection.
-          // Customer must explicitly choose size/pack.
-
-          // Legacy Fallback for old sizes if no variants (Optional, but keeping consistent)
-          if (!fetchedProduct.variants?.length && fetchedProduct.sizes?.length > 0) {
-            // If strict about "no selection", we do nothing here either.
-          }
         }
       } catch (error) {
         console.error('Failed to fetch product:', error);
@@ -152,10 +143,6 @@ const ProductDetailPage = () => {
 
   // Handle Add to Cart
   const handleAddToCart = () => {
-    if (!user) {
-      dispatch(openLoginModal());
-      return;
-    }
     if (!product) return;
 
     let selectedVariant = null;
@@ -201,6 +188,14 @@ const ProductDetailPage = () => {
       fragrance: selectedFragrance
     };
 
+    if (!user) {
+      dispatch(openLoginModal({
+        pendingAction: 'CART',
+        pendingActionData: cartItem
+      }));
+      return;
+    }
+
     dispatch(addToCart(cartItem));
     toast.success('Added to cart!');
   };
@@ -208,7 +203,8 @@ const ProductDetailPage = () => {
   // Handle Buy Now
   const handleBuyNow = () => {
     handleAddToCart();
-    navigate('/cart');
+    // navigate('/cart'); // handleAddToCart now handles redirect in LoginModal if not user
+    if (user) navigate('/cart');
   };
 
   if (loading) {
@@ -296,7 +292,6 @@ const ProductDetailPage = () => {
                     selectedVariantId={selectedVariantId}
                     onSelectVariant={(variantId) => {
                       setSelectedVariantId(variantId);
-                      // Find variant to reset pack logic
                       const variant = product.variants?.find(v => v._id === variantId);
                       if (variant && variant.packs && variant.packs.length > 0) {
                         setSelectedPackId(variant.packs[0]._id);
@@ -310,7 +305,7 @@ const ProductDetailPage = () => {
                 {/* Pack Selection (Context Aware) */}
                 {(() => {
                   const activeVariant = product.variants?.find(v => v._id === selectedVariantId);
-                  const activePacks = activeVariant?.packs || product.packs; // Fallback to global packs
+                  const activePacks = activeVariant?.packs || product.packs;
 
                   if (activePacks && activePacks.length > 0) {
                     return (
@@ -394,23 +389,10 @@ const ProductDetailPage = () => {
                     </div>
                   </div>
                 )}
-
-                {/* Legacy Fragrances (Keep for now if needed) */}
-                {product.fragrances && product.fragrances.length > 0 && (
-                  <div className="mt-4">
-                    {/* ... legacy fragrance selector ... */}
-                    <p className="text-xs text-gray-500">Fragrance selection available in checkout/notes for now.</p>
-                  </div>
-                )}
-
               </div>
 
               {/* Price Breakdown & Trust Badges */}
               <div className="space-y-6">
-                {/* 
-                  EnhancedPriceBreakdown needs update to accept new structure. 
-                  For now passing raw values or adapting.
-                */}
                 {(pricingResult.breakdown.packAdjustment !== 0 || pricingResult.breakdown.styleAdjustment > 0 || pricingResult.breakdown.addOnsTotal > 0) && (
                   <div className="bg-gray-50 rounded-xl p-4 space-y-2">
                     <div className="flex justify-between text-gray-600">
@@ -435,13 +417,6 @@ const ProductDetailPage = () => {
                         <span>+₹{pricingResult.breakdown.addOnsTotal}</span>
                       </div>
                     )}
-                    {/* Removed Final Price row as it is duplicate of main price */
-                    /* 
-                    <div className="border-t border-gray-200 pt-2 flex justify-between font-bold text-lg text-gray-900">
-                      <span>Final Price</span>
-                      <span>₹{pricingResult.finalPrice}</span>
-                    </div> 
-                    */}
                   </div>
                 )}
 
@@ -471,8 +446,6 @@ const ProductDetailPage = () => {
                     Free shipping on all prepaid orders • 7-day easy returns
                   </p>
                 </div>
-
-                {/* Trust Badges */}
                 <TrustBadges />
               </div>
 
@@ -491,7 +464,6 @@ const ProductDetailPage = () => {
 
         {/* Bottom Full-Width Sections (Reviews, FAQ, Related) */}
         <div className="mt-8 lg:mt-12 space-y-6 lg:space-y-12">
-
           {/* Mobile-only short description */}
           <div className="lg:hidden px-4">
             <ProductDescription
